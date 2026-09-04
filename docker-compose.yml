@@ -1,0 +1,115 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: vms
+      POSTGRES_USER: vms
+      POSTGRES_PASSWORD: vms
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vms"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: replace-me
+    ports:
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+
+  api:
+    build:
+      context: ./apps/api
+    command: sh -c "python manage.py migrate && python manage.py seed_demo && gunicorn config.wsgi:application --bind 0.0.0.0:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-unsafe-local-compose-only}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://vms:vms@postgres:5432/vms}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:3000}
+      USE_S3_STORAGE: ${USE_S3_STORAGE:-false}
+      AWS_STORAGE_BUCKET_NAME: ${AWS_STORAGE_BUCKET_NAME:-vms-documents}
+      AWS_S3_ENDPOINT_URL: ${AWS_S3_ENDPOINT_URL:-http://minio:9000}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-minio}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-replace-me}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    volumes:
+      - ./apps/api:/app
+
+  worker:
+    build:
+      context: ./apps/api
+    command: celery -A config worker -l info
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-unsafe-local-compose-only}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://vms:vms@postgres:5432/vms}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      USE_S3_STORAGE: ${USE_S3_STORAGE:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/api:/app
+
+  beat:
+    build:
+      context: ./apps/api
+    command: celery -A config beat -l info
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-unsafe-local-compose-only}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://vms:vms@postgres:5432/vms}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/api:/app
+
+  web:
+    build:
+      context: ./apps/web
+    environment:
+      API_INTERNAL_URL: http://api:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  minio_data:

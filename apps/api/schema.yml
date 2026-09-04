@@ -1,0 +1,7600 @@
+openapi: 3.0.3
+info:
+  title: Drona Logitech Operations API
+  version: 0.1.0
+paths:
+  /api/approval-batches/:
+    get:
+      operationId: api_approval_batches_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedApprovalBatchList'
+          description: ''
+    post:
+      operationId: api_approval_batches_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalBatchCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ApprovalBatchCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ApprovalBatchCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalBatchCreate'
+          description: ''
+  /api/approval-batches/{id}/:
+    get:
+      operationId: api_approval_batches_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this payment approval batch.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalBatch'
+          description: ''
+  /api/approval-batches/{id}/comments/:
+    get:
+      operationId: api_approval_batches_comments_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this payment approval batch.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalBatch'
+          description: ''
+    post:
+      operationId: api_approval_batches_comments_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this payment approval batch.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalBatch'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ApprovalBatch'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ApprovalBatch'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalBatch'
+          description: ''
+  /api/approval-batches/{id}/decide/:
+    post:
+      operationId: api_approval_batches_decide_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this payment approval batch.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalBatch'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ApprovalBatch'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ApprovalBatch'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalBatch'
+          description: ''
+  /api/approval-batches/{id}/submit/:
+    post:
+      operationId: api_approval_batches_submit_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this payment approval batch.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalBatch'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ApprovalBatch'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ApprovalBatch'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalBatch'
+          description: ''
+  /api/approval-rules/:
+    get:
+      operationId: api_approval_rules_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedApprovalRuleList'
+          description: ''
+    post:
+      operationId: api_approval_rules_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalRule'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ApprovalRule'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ApprovalRule'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalRule'
+          description: ''
+  /api/approval-rules/{id}/:
+    get:
+      operationId: api_approval_rules_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this approval rule.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalRule'
+          description: ''
+    put:
+      operationId: api_approval_rules_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this approval rule.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalRule'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ApprovalRule'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ApprovalRule'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalRule'
+          description: ''
+    patch:
+      operationId: api_approval_rules_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this approval rule.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedApprovalRule'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedApprovalRule'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedApprovalRule'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalRule'
+          description: ''
+    delete:
+      operationId: api_approval_rules_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this approval rule.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/audit/:
+    get:
+      operationId: api_audit_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAuditLogList'
+          description: ''
+  /api/audit/{id}/:
+    get:
+      operationId: api_audit_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this audit log.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLog'
+          description: ''
+  /api/auth/csrf/:
+    get:
+      operationId: api_auth_csrf_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/auth/login/:
+    post:
+      operationId: api_auth_login_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Login'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Login'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/auth/logout/:
+    post:
+      operationId: api_auth_logout_create
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/auth/me/:
+    get:
+      operationId: api_auth_me_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/auth/mfa/confirm/:
+    post:
+      operationId: api_auth_mfa_confirm_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OTP'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OTP'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OTP'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/auth/mfa/disable/:
+    post:
+      operationId: api_auth_mfa_disable_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OTP'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OTP'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OTP'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/auth/mfa/setup/:
+    post:
+      operationId: api_auth_mfa_setup_create
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/auth/password/change/:
+    post:
+      operationId: api_auth_password_change_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/auth/password/reset/:
+    post:
+      operationId: api_auth_password_reset_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/auth/password/reset/confirm/:
+    post:
+      operationId: api_auth_password_reset_confirm_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirm'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirm'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirm'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/billings/:
+    get:
+      operationId: api_billings_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedClientBillingList'
+          description: ''
+    post:
+      operationId: api_billings_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientBilling'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ClientBilling'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ClientBilling'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientBilling'
+          description: ''
+  /api/billings/{id}/:
+    get:
+      operationId: api_billings_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this client billing.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientBilling'
+          description: ''
+    patch:
+      operationId: api_billings_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this client billing.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedClientBilling'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedClientBilling'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedClientBilling'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientBilling'
+          description: ''
+  /api/clients/:
+    get:
+      operationId: api_clients_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedClientList'
+          description: ''
+    post:
+      operationId: api_clients_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Client'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Client'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Client'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+          description: ''
+  /api/clients/{id}/:
+    get:
+      operationId: api_clients_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this client.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+          description: ''
+    put:
+      operationId: api_clients_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this client.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Client'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Client'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Client'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+          description: ''
+    patch:
+      operationId: api_clients_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this client.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedClient'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedClient'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedClient'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+          description: ''
+    delete:
+      operationId: api_clients_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this client.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/comments/:
+    get:
+      operationId: api_comments_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCommentList'
+          description: ''
+    post:
+      operationId: api_comments_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Comment'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Comment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Comment'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+          description: ''
+  /api/comments/{id}/:
+    get:
+      operationId: api_comments_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this comment.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+          description: ''
+    patch:
+      operationId: api_comments_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this comment.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedComment'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedComment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedComment'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+          description: ''
+  /api/comments/mention-candidates/:
+    get:
+      operationId: api_comments_mention_candidates_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+          description: ''
+  /api/dashboard/:
+    get:
+      operationId: api_dashboard_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/documents/:
+    get:
+      operationId: api_documents_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDocumentList'
+          description: ''
+    post:
+      operationId: api_documents_create
+      tags:
+      - api
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Document'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Document'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+          description: ''
+  /api/documents/{id}/:
+    get:
+      operationId: api_documents_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this document.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+          description: ''
+  /api/documents/{id}/download/:
+    get:
+      operationId: api_documents_download_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this document.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+          description: ''
+  /api/drivers/:
+    get:
+      operationId: api_drivers_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDriverList'
+          description: ''
+    post:
+      operationId: api_drivers_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Driver'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Driver'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Driver'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+          description: ''
+  /api/drivers/{id}/:
+    get:
+      operationId: api_drivers_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this driver.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+          description: ''
+    put:
+      operationId: api_drivers_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this driver.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Driver'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Driver'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Driver'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+          description: ''
+    patch:
+      operationId: api_drivers_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this driver.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDriver'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDriver'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDriver'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+          description: ''
+    delete:
+      operationId: api_drivers_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this driver.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/finance/pending/:
+    get:
+      operationId: api_finance_pending_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/health/:
+    get:
+      operationId: api_health_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/imports/excel/{job_id}/confirm/:
+    post:
+      operationId: api_imports_excel_confirm_create
+      parameters:
+      - in: path
+        name: job_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: {}
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: {}
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/imports/excel/export/:
+    get:
+      operationId: api_imports_excel_export_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/imports/excel/preview/:
+    post:
+      operationId: api_imports_excel_preview_create
+      tags:
+      - api
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: {}
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/imports/indents/{job_id}/confirm/:
+    post:
+      operationId: api_imports_indents_confirm_create
+      parameters:
+      - in: path
+        name: job_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: {}
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: {}
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/imports/indents/preview/:
+    post:
+      operationId: api_imports_indents_preview_create
+      tags:
+      - api
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: {}
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/imports/indents/template/:
+    get:
+      operationId: api_imports_indents_template_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/indents/:
+    get:
+      operationId: api_indents_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedIndentList'
+          description: ''
+    post:
+      operationId: api_indents_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Indent'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Indent'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Indent'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indent'
+          description: ''
+  /api/indents/{id}/:
+    get:
+      operationId: api_indents_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this indent.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indent'
+          description: ''
+    put:
+      operationId: api_indents_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this indent.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Indent'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Indent'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Indent'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indent'
+          description: ''
+    patch:
+      operationId: api_indents_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this indent.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedIndent'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedIndent'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedIndent'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indent'
+          description: ''
+    delete:
+      operationId: api_indents_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this indent.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/integration-connections/:
+    get:
+      operationId: api_integration_connections_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedIntegrationConnectionList'
+          description: ''
+  /api/integration-connections/{id}/:
+    get:
+      operationId: api_integration_connections_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this integration connection.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationConnection'
+          description: ''
+  /api/integration-connections/{id}/disconnect/:
+    post:
+      operationId: api_integration_connections_disconnect_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this integration connection.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntegrationConnection'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/IntegrationConnection'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/IntegrationConnection'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationConnection'
+          description: ''
+  /api/integration-connections/smtp/connect/:
+    post:
+      operationId: api_integration_connections_smtp_connect_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntegrationConnection'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/IntegrationConnection'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/IntegrationConnection'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationConnection'
+          description: ''
+  /api/integration-connections/whatsapp/connect/:
+    post:
+      operationId: api_integration_connections_whatsapp_connect_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntegrationConnection'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/IntegrationConnection'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/IntegrationConnection'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationConnection'
+          description: ''
+  /api/messages/:
+    get:
+      operationId: api_messages_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedIntegrationMessageList'
+          description: ''
+  /api/messages/{id}/:
+    get:
+      operationId: api_messages_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this integration message.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationMessage'
+          description: ''
+  /api/messages/{id}/read/:
+    post:
+      operationId: api_messages_read_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this integration message.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntegrationMessage'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/IntegrationMessage'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/IntegrationMessage'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationMessage'
+          description: ''
+  /api/messages/{id}/retry/:
+    post:
+      operationId: api_messages_retry_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this integration message.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntegrationMessage'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/IntegrationMessage'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/IntegrationMessage'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntegrationMessage'
+          description: ''
+  /api/mis/import/{job_id}/confirm/:
+    post:
+      operationId: api_mis_import_confirm_create
+      parameters:
+      - in: path
+        name: job_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: {}
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: {}
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/mis/import/preview/:
+    post:
+      operationId: api_mis_import_preview_create
+      tags:
+      - api
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: {}
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/mis/imports/:
+    get:
+      operationId: api_mis_imports_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/mis/records/:
+    get:
+      operationId: api_mis_records_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/mis/template/:
+    get:
+      operationId: api_mis_template_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/notification-preferences/:
+    get:
+      operationId: api_notification_preferences_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNotificationPreferenceList'
+          description: ''
+    post:
+      operationId: api_notification_preferences_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationPreference'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NotificationPreference'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NotificationPreference'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreference'
+          description: ''
+  /api/notification-preferences/{id}/:
+    get:
+      operationId: api_notification_preferences_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this notification preference.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreference'
+          description: ''
+    patch:
+      operationId: api_notification_preferences_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this notification preference.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedNotificationPreference'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedNotificationPreference'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedNotificationPreference'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreference'
+          description: ''
+    delete:
+      operationId: api_notification_preferences_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this notification preference.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/notification-templates/:
+    get:
+      operationId: api_notification_templates_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNotificationTemplateList'
+          description: ''
+    post:
+      operationId: api_notification_templates_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationTemplate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NotificationTemplate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NotificationTemplate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationTemplate'
+          description: ''
+  /api/notification-templates/{id}/:
+    get:
+      operationId: api_notification_templates_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this notification template.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationTemplate'
+          description: ''
+    put:
+      operationId: api_notification_templates_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this notification template.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationTemplate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NotificationTemplate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NotificationTemplate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationTemplate'
+          description: ''
+    patch:
+      operationId: api_notification_templates_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this notification template.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedNotificationTemplate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedNotificationTemplate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedNotificationTemplate'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationTemplate'
+          description: ''
+    delete:
+      operationId: api_notification_templates_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this notification template.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/payments/:
+    get:
+      operationId: api_payments_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPaymentList'
+          description: ''
+    post:
+      operationId: api_payments_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PaymentCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PaymentCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentCreate'
+          description: ''
+  /api/payments/{id}/:
+    get:
+      operationId: api_payments_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this finance payment transaction.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+          description: ''
+  /api/payments/{id}/reverse/:
+    post:
+      operationId: api_payments_reverse_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this finance payment transaction.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Payment'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Payment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Payment'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+          description: ''
+  /api/permission-matrix/:
+    get:
+      operationId: api_permission_matrix_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/readiness/:
+    get:
+      operationId: api_readiness_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/recoveries/:
+    get:
+      operationId: api_recoveries_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTripRecoveryList'
+          description: ''
+    post:
+      operationId: api_recoveries_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TripRecovery'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TripRecovery'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TripRecovery'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripRecovery'
+          description: ''
+  /api/recoveries/{id}/:
+    get:
+      operationId: api_recoveries_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this trip recovery.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripRecovery'
+          description: ''
+  /api/recoveries/{id}/resolve/:
+    post:
+      operationId: api_recoveries_resolve_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this trip recovery.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TripRecovery'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TripRecovery'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TripRecovery'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripRecovery'
+          description: ''
+  /api/reports/:
+    get:
+      operationId: report_catalog
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/reports/{slug}/:
+    get:
+      operationId: report_detail
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/search/:
+    get:
+      operationId: api_search_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/settings/:
+    get:
+      operationId: api_settings_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationSettings'
+          description: ''
+    patch:
+      operationId: api_settings_partial_update
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganizationSettings'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganizationSettings'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganizationSettings'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationSettings'
+          description: ''
+  /api/settlements/:
+    get:
+      operationId: api_settlements_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedFinalTripSettlementList'
+          description: ''
+    post:
+      operationId: api_settlements_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinalTripSettlement'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FinalTripSettlement'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FinalTripSettlement'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinalTripSettlement'
+          description: ''
+  /api/settlements/{id}/:
+    get:
+      operationId: api_settlements_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this final trip settlement.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinalTripSettlement'
+          description: ''
+    patch:
+      operationId: api_settlements_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this final trip settlement.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFinalTripSettlement'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFinalTripSettlement'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFinalTripSettlement'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinalTripSettlement'
+          description: ''
+  /api/settlements/{id}/finalize/:
+    post:
+      operationId: api_settlements_finalize_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this final trip settlement.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinalTripSettlement'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FinalTripSettlement'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FinalTripSettlement'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinalTripSettlement'
+          description: ''
+  /api/settlements/{id}/submit/:
+    post:
+      operationId: api_settlements_submit_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this final trip settlement.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinalTripSettlement'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FinalTripSettlement'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FinalTripSettlement'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinalTripSettlement'
+          description: ''
+  /api/tds/:
+    get:
+      operationId: api_tds_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTDSEntryList'
+          description: ''
+  /api/tds/{id}/:
+    get:
+      operationId: api_tds_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this tds entry.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TDSEntry'
+          description: ''
+  /api/trip-ledger/{trip_id}/:
+    get:
+      operationId: api_trip_ledger_retrieve
+      parameters:
+      - in: path
+        name: trip_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/trips/:
+    get:
+      operationId: api_trips_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTripList'
+          description: ''
+    post:
+      operationId: api_trips_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Trip'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Trip'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Trip'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+          description: ''
+  /api/trips/{id}/:
+    get:
+      operationId: api_trips_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this trip.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+          description: ''
+    put:
+      operationId: api_trips_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this trip.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Trip'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Trip'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Trip'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+          description: ''
+    patch:
+      operationId: api_trips_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this trip.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTrip'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTrip'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTrip'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+          description: ''
+    delete:
+      operationId: api_trips_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this trip.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/trips/{id}/calculate/:
+    get:
+      operationId: api_trips_calculate_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this trip.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+          description: ''
+  /api/trips/{id}/cancel/:
+    post:
+      operationId: api_trips_cancel_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this trip.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Trip'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Trip'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Trip'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+          description: ''
+  /api/trips/{id}/charges/:
+    post:
+      operationId: api_trips_charges_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this trip.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Trip'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Trip'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Trip'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+          description: ''
+  /api/trips/{id}/deliver/:
+    post:
+      operationId: api_trips_deliver_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this trip.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Trip'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Trip'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Trip'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+          description: ''
+  /api/trips/{id}/indent-suggestions/:
+    get:
+      operationId: api_trips_indent_suggestions_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this trip.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+          description: ''
+  /api/trips/{id}/revise/:
+    post:
+      operationId: api_trips_revise_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this trip.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Trip'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Trip'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Trip'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+          description: ''
+  /api/unmapped-messages/:
+    get:
+      operationId: api_unmapped_messages_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUnmappedInboundList'
+          description: ''
+  /api/unmapped-messages/{id}/:
+    get:
+      operationId: api_unmapped_messages_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this unmapped inbound message.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnmappedInbound'
+          description: ''
+  /api/unmapped-messages/{id}/resolve/:
+    post:
+      operationId: api_unmapped_messages_resolve_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this unmapped inbound message.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnmappedInbound'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UnmappedInbound'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UnmappedInbound'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnmappedInbound'
+          description: ''
+  /api/users/:
+    get:
+      operationId: api_users_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserList'
+          description: ''
+    post:
+      operationId: api_users_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/users/{id}/:
+    get:
+      operationId: api_users_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: api_users_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/vehicles/:
+    get:
+      operationId: api_vehicles_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedVehicleList'
+          description: ''
+    post:
+      operationId: api_vehicles_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Vehicle'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Vehicle'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Vehicle'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+          description: ''
+  /api/vehicles/{id}/:
+    get:
+      operationId: api_vehicles_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this vehicle.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+          description: ''
+    put:
+      operationId: api_vehicles_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this vehicle.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Vehicle'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Vehicle'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Vehicle'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+          description: ''
+    patch:
+      operationId: api_vehicles_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this vehicle.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedVehicle'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedVehicle'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedVehicle'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+          description: ''
+    delete:
+      operationId: api_vehicles_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this vehicle.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/vendor-bank-accounts/:
+    get:
+      operationId: api_vendor_bank_accounts_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedVendorBankAccountList'
+          description: ''
+    post:
+      operationId: api_vendor_bank_accounts_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VendorBankAccount'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VendorBankAccount'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VendorBankAccount'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorBankAccount'
+          description: ''
+  /api/vendor-bank-accounts/{id}/:
+    get:
+      operationId: api_vendor_bank_accounts_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this vendor bank account.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorBankAccount'
+          description: ''
+    put:
+      operationId: api_vendor_bank_accounts_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this vendor bank account.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VendorBankAccount'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VendorBankAccount'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VendorBankAccount'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorBankAccount'
+          description: ''
+    patch:
+      operationId: api_vendor_bank_accounts_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this vendor bank account.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedVendorBankAccount'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedVendorBankAccount'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedVendorBankAccount'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorBankAccount'
+          description: ''
+    delete:
+      operationId: api_vendor_bank_accounts_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this vendor bank account.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/vendor-contacts/:
+    get:
+      operationId: api_vendor_contacts_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedVendorContactList'
+          description: ''
+    post:
+      operationId: api_vendor_contacts_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VendorContact'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VendorContact'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VendorContact'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorContact'
+          description: ''
+  /api/vendor-contacts/{id}/:
+    get:
+      operationId: api_vendor_contacts_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this vendor contact.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorContact'
+          description: ''
+    put:
+      operationId: api_vendor_contacts_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this vendor contact.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VendorContact'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VendorContact'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VendorContact'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorContact'
+          description: ''
+    patch:
+      operationId: api_vendor_contacts_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this vendor contact.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedVendorContact'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedVendorContact'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedVendorContact'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorContact'
+          description: ''
+    delete:
+      operationId: api_vendor_contacts_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this vendor contact.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/vendor-ledger/{vendor_id}/:
+    get:
+      operationId: api_vendor_ledger_retrieve
+      parameters:
+      - in: path
+        name: vendor_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/vendors/:
+    get:
+      operationId: api_vendors_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedVendorList'
+          description: ''
+    post:
+      operationId: api_vendors_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Vendor'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Vendor'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Vendor'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vendor'
+          description: ''
+  /api/vendors/{id}/:
+    get:
+      operationId: api_vendors_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this vendor.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vendor'
+          description: ''
+    put:
+      operationId: api_vendors_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this vendor.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Vendor'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Vendor'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Vendor'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vendor'
+          description: ''
+    patch:
+      operationId: api_vendors_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this vendor.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedVendor'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedVendor'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedVendor'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vendor'
+          description: ''
+    delete:
+      operationId: api_vendors_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this vendor.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/webhooks/email/:
+    post:
+      operationId: api_webhooks_email_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: {}
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: {}
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/webhooks/whatsapp/:
+    get:
+      operationId: api_webhooks_whatsapp_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+    post:
+      operationId: api_webhooks_whatsapp_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: {}
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: {}
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+components:
+  schemas:
+    ActionEnum:
+      enum:
+      - SUBMIT
+      - APPROVE
+      - REJECT
+      - SEND_BACK
+      - CANCEL
+      - REOPEN
+      type: string
+      description: |-
+        * `SUBMIT` - Submit
+        * `APPROVE` - Approve
+        * `REJECT` - Reject
+        * `SEND_BACK` - Send back
+        * `CANCEL` - Cancel
+        * `REOPEN` - Reopen
+    AllocationInput:
+      type: object
+      properties:
+        approval_item_id:
+          type: integer
+          minimum: 1
+        gross_amount_allocated:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        tds_allocated:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        net_cash_allocated:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+      required:
+      - approval_item_id
+      - gross_amount_allocated
+      - net_cash_allocated
+      - tds_allocated
+    ApprovalAction:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        actor_name:
+          type: string
+          readOnly: true
+        action:
+          $ref: '#/components/schemas/ActionEnum'
+        scope:
+          $ref: '#/components/schemas/ScopeEnum'
+        comment:
+          type: string
+        approval_stage:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        captured_totals: {}
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        actor:
+          type: integer
+        batch:
+          type: integer
+        item:
+          type: integer
+          nullable: true
+      required:
+      - action
+      - actor
+      - actor_name
+      - batch
+      - created_at
+      - id
+      - scope
+    ApprovalBatch:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        requester_name:
+          type: string
+          readOnly: true
+        client_name:
+          type: string
+          readOnly: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApprovalItem'
+          readOnly: true
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApprovalAction'
+          readOnly: true
+        vendor_subtotals:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        stage_decisions:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        approval_no:
+          type: string
+          readOnly: true
+        submitted_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/ApprovalBatchStatusEnum'
+          readOnly: true
+        revision_no:
+          type: integer
+          readOnly: true
+        current_stage:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        revision_diff: {}
+        approval_rule_snapshot:
+          readOnly: true
+        gross_requested:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,2})?$
+          readOnly: true
+        tds_requested:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,2})?$
+          readOnly: true
+        net_requested:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,2})?$
+          readOnly: true
+        purpose:
+          type: string
+          maxLength: 30
+        client:
+          type: integer
+        requested_by:
+          type: integer
+          readOnly: true
+        supersedes:
+          type: integer
+          nullable: true
+      required:
+      - actions
+      - approval_no
+      - approval_rule_snapshot
+      - client
+      - client_name
+      - created_at
+      - gross_requested
+      - id
+      - items
+      - net_requested
+      - requested_by
+      - requester_name
+      - revision_no
+      - stage_decisions
+      - status
+      - submitted_at
+      - tds_requested
+      - updated_at
+      - vendor_subtotals
+    ApprovalBatchCreate:
+      type: object
+      properties:
+        trip_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+          minItems: 1
+        purpose:
+          allOf:
+          - $ref: '#/components/schemas/PurposeEnum'
+          default: ADVANCE
+      required:
+      - trip_ids
+    ApprovalBatchStatusEnum:
+      enum:
+      - DRAFT
+      - PENDING
+      - CHANGES_REQUESTED
+      - PARTIALLY_APPROVED
+      - APPROVED
+      - REJECTED
+      - CANCELLED
+      - SUPERSEDED
+      type: string
+      description: |-
+        * `DRAFT` - Draft
+        * `PENDING` - Pending
+        * `CHANGES_REQUESTED` - Changes requested
+        * `PARTIALLY_APPROVED` - Partially approved
+        * `APPROVED` - Approved
+        * `REJECTED` - Rejected
+        * `CANCELLED` - Cancelled
+        * `SUPERSEDED` - Superseded
+    ApprovalItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        trip_no:
+          type: string
+          readOnly: true
+        route:
+          type: string
+          readOnly: true
+        vendor_name:
+          type: string
+          readOnly: true
+        paid_gross:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+        paid_tds:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+        paid_net:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        freight_rate_snapshot:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        advance_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        freight_advance_gross:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        advance_eligible_charges:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        advance_stage_deductions:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        gross_requested:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        tds_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        tds_policy_snapshot:
+          $ref: '#/components/schemas/TDSPolicyEnum'
+        tds_base:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        tds_this_request:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        net_requested:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        calculation_breakdown: {}
+        item_status:
+          $ref: '#/components/schemas/ItemStatusEnum'
+        approver_note:
+          type: string
+        batch:
+          type: integer
+        trip:
+          type: integer
+        vendor:
+          type: integer
+      required:
+      - advance_percent
+      - batch
+      - created_at
+      - freight_advance_gross
+      - freight_rate_snapshot
+      - gross_requested
+      - id
+      - net_requested
+      - paid_gross
+      - paid_net
+      - paid_tds
+      - route
+      - tds_base
+      - tds_policy_snapshot
+      - tds_rate
+      - tds_this_request
+      - trip
+      - trip_no
+      - updated_at
+      - vendor
+      - vendor_name
+    ApprovalRule:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        stages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApprovalStage'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        branch:
+          type: string
+          maxLength: 100
+        purpose:
+          type: string
+          maxLength: 30
+        min_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        max_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        conditions: {}
+        active:
+          type: boolean
+        client:
+          type: integer
+          nullable: true
+      required:
+      - created_at
+      - id
+      - name
+      - stages
+      - updated_at
+    ApprovalStage:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        sequence:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        role:
+          type: string
+          maxLength: 20
+        label:
+          type: string
+          maxLength: 100
+      required:
+      - id
+      - label
+      - sequence
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        actor_name:
+          type: string
+          readOnly: true
+        action:
+          type: string
+          maxLength: 80
+        object_type:
+          type: string
+          maxLength: 100
+        object_id:
+          type: string
+          maxLength: 80
+        before: {}
+        after: {}
+        request_id:
+          type: string
+          maxLength: 64
+        source:
+          $ref: '#/components/schemas/AuditLogSourceEnum'
+        previous_hash:
+          type: string
+          maxLength: 64
+        entry_hash:
+          type: string
+          maxLength: 64
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        actor:
+          type: integer
+          nullable: true
+      required:
+      - action
+      - actor_name
+      - created_at
+      - entry_hash
+      - id
+      - object_id
+      - object_type
+    AuditLogSourceEnum:
+      enum:
+      - UI
+      - API
+      - IMPORT
+      - INTEGRATION
+      - SYSTEM
+      type: string
+      description: |-
+        * `UI` - UI
+        * `API` - API
+        * `IMPORT` - Import
+        * `INTEGRATION` - Integration
+        * `SYSTEM` - System
+    BlankEnum:
+      enum:
+      - ''
+    ChannelEnum:
+      enum:
+      - EMAIL
+      - WHATSAPP
+      - IN_APP
+      type: string
+      description: |-
+        * `EMAIL` - Email
+        * `WHATSAPP` - WhatsApp
+        * `IN_APP` - In app
+    ChargeTypeEnum:
+      enum:
+      - FREIGHT
+      - UNLOADING
+      - DETENTION
+      - LOADING
+      - TOLL
+      - OTHER
+      - DEDUCTION
+      - REIMBURSEMENT
+      type: string
+      description: |-
+        * `FREIGHT` - Freight
+        * `UNLOADING` - Unloading
+        * `DETENTION` - Detention
+        * `LOADING` - Loading
+        * `TOLL` - Toll
+        * `OTHER` - Other
+        * `DEDUCTION` - Deduction
+        * `REIMBURSEMENT` - Reimbursement
+    Client:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        code:
+          type: string
+          maxLength: 20
+        name:
+          type: string
+          maxLength: 150
+        active:
+          type: boolean
+        default_branch:
+          type: string
+          maxLength: 100
+        billing_settings: {}
+      required:
+      - code
+      - created_at
+      - id
+      - name
+      - updated_at
+    ClientBilling:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        trip_no:
+          type: string
+          readOnly: true
+        gross_profit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+        margin_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,7}(?:\.\d{0,2})?$
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        billing_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        invoice_no:
+          type: string
+          maxLength: 100
+        invoice_date:
+          type: string
+          format: date
+          nullable: true
+        payment_status:
+          $ref: '#/components/schemas/PaymentStatusEnum'
+        received_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        internal_trip_costs:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        notes:
+          type: string
+        trip:
+          type: integer
+        client:
+          type: integer
+          readOnly: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - billing_amount
+      - client
+      - created_at
+      - created_by
+      - gross_profit
+      - id
+      - margin_percent
+      - trip
+      - trip_no
+      - updated_at
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        object_type:
+          type: string
+          maxLength: 60
+        object_id:
+          type: string
+          maxLength: 80
+        author:
+          type: integer
+          readOnly: true
+        author_name:
+          type: string
+          readOnly: true
+        body:
+          type: string
+        visibility:
+          $ref: '#/components/schemas/VisibilityEnum'
+        parent:
+          type: integer
+          nullable: true
+        mentions:
+          type: array
+          items:
+            type: integer
+        attachments:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        edit_history:
+          readOnly: true
+        edited_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - attachments
+      - author
+      - author_name
+      - body
+      - created_at
+      - edit_history
+      - edited_at
+      - id
+      - object_id
+      - object_type
+      - updated_at
+    Document:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        object_type:
+          type: string
+          maxLength: 60
+        object_id:
+          type: string
+          maxLength: 80
+        kind:
+          $ref: '#/components/schemas/KindEnum'
+        file:
+          type: string
+          format: uri
+          writeOnly: true
+        download_url:
+          type: string
+          format: uri
+          readOnly: true
+        original_name:
+          type: string
+          readOnly: true
+        content_type:
+          type: string
+          readOnly: true
+        size:
+          type: integer
+          readOnly: true
+        sha256:
+          type: string
+          readOnly: true
+        scan_status:
+          allOf:
+          - $ref: '#/components/schemas/ScanStatusEnum'
+          readOnly: true
+        scan_detail:
+          type: string
+          readOnly: true
+        uploaded_by:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - content_type
+      - created_at
+      - download_url
+      - file
+      - id
+      - object_id
+      - object_type
+      - original_name
+      - scan_detail
+      - scan_status
+      - sha256
+      - size
+      - uploaded_by
+    Driver:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        vendor_name:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        phone:
+          type: string
+          maxLength: 30
+        active:
+          type: boolean
+        vendor:
+          type: integer
+          nullable: true
+      required:
+      - created_at
+      - id
+      - name
+      - phone
+      - updated_at
+      - vendor_name
+    FinalTripSettlement:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        trip_no:
+          type: string
+          readOnly: true
+        missing_documents:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        final_freight:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        additive_charges:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        vendor_deductions:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        total_vendor_gross_cost:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+        total_tds_required:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+        total_tds_deducted:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+        total_net_vendor_payable:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+        total_cash_paid:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+        remaining_cash_payable:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+        settlement_status:
+          allOf:
+          - $ref: '#/components/schemas/SettlementStatusEnum'
+          readOnly: true
+        calculation_snapshot:
+          readOnly: true
+        approved_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        settled_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        trip:
+          type: integer
+        settlement_approval:
+          type: integer
+          readOnly: true
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - approved_at
+      - calculation_snapshot
+      - created_at
+      - created_by
+      - final_freight
+      - id
+      - missing_documents
+      - remaining_cash_payable
+      - settled_at
+      - settlement_approval
+      - settlement_status
+      - total_cash_paid
+      - total_net_vendor_payable
+      - total_tds_deducted
+      - total_tds_required
+      - total_vendor_gross_cost
+      - trip
+      - trip_no
+      - updated_at
+    Indent:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        client_name:
+          type: string
+          readOnly: true
+        trip_count:
+          type: integer
+          readOnly: true
+        trip_numbers:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        trip_summaries:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        indent_no:
+          type: string
+          maxLength: 50
+        indent_date:
+          type: string
+          format: date
+        challan_no:
+          type: string
+          maxLength: 50
+        challan_datetime:
+          type: string
+          format: date-time
+          nullable: true
+        branch:
+          type: string
+          maxLength: 100
+        cost_center:
+          type: string
+          maxLength: 100
+        origin:
+          type: string
+          maxLength: 150
+        destination:
+          type: string
+          maxLength: 150
+        ship_to_party_code:
+          type: string
+          maxLength: 60
+        ship_to_party_name:
+          type: string
+          maxLength: 180
+        ship_to_address:
+          type: string
+        destination_state:
+          type: string
+          maxLength: 80
+        pin_code:
+          type: string
+          maxLength: 12
+        item:
+          type: string
+          maxLength: 120
+        default_quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,11}(?:\.\d{0,3})?$
+          nullable: true
+        quantity_ltrs:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,11}(?:\.\d{0,3})?$
+          nullable: true
+        reporting_datetime:
+          type: string
+          format: date-time
+          nullable: true
+        expected_delivery_date:
+          type: string
+          format: date
+          nullable: true
+        uom_ltrs:
+          type: string
+          maxLength: 40
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,11}(?:\.\d{0,3})?$
+          nullable: true
+        total_load:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,11}(?:\.\d{0,3})?$
+          nullable: true
+        required_vehicle_type:
+          type: string
+          maxLength: 80
+        customer_reference:
+          type: string
+          maxLength: 100
+        notes:
+          type: string
+        status:
+          $ref: '#/components/schemas/IndentStatusEnum'
+        client:
+          type: integer
+      required:
+      - challan_no
+      - client
+      - client_name
+      - created_at
+      - destination
+      - id
+      - origin
+      - trip_count
+      - trip_numbers
+      - trip_summaries
+      - updated_at
+    IndentStatusEnum:
+      enum:
+      - DRAFT
+      - OPEN
+      - FULFILLED
+      - CANCELLED
+      type: string
+      description: |-
+        * `DRAFT` - Draft
+        * `OPEN` - Open
+        * `FULFILLED` - Fulfilled
+        * `CANCELLED` - Cancelled
+    IntegrationConnection:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        provider:
+          $ref: '#/components/schemas/ProviderEnum'
+        status:
+          type: string
+          maxLength: 20
+        account_label:
+          type: string
+          maxLength: 150
+        configuration: {}
+        watch_expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_synced_at:
+          type: string
+          format: date-time
+          nullable: true
+        last_error:
+          type: string
+      required:
+      - created_at
+      - id
+      - provider
+      - updated_at
+    IntegrationMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        channel:
+          $ref: '#/components/schemas/ChannelEnum'
+        direction:
+          $ref: '#/components/schemas/IntegrationMessageDirectionEnum'
+        idempotency_key:
+          type: string
+          maxLength: 180
+        external_message_id:
+          type: string
+          maxLength: 180
+        external_thread_id:
+          type: string
+          maxLength: 180
+        object_type:
+          type: string
+          maxLength: 60
+        object_id:
+          type: string
+          maxLength: 80
+        recipient:
+          type: string
+          maxLength: 180
+        template_id:
+          type: string
+          maxLength: 100
+        subject:
+          type: string
+          maxLength: 240
+        body_summary:
+          type: string
+        status:
+          type: string
+          maxLength: 20
+        raw_metadata: {}
+        sent_at:
+          type: string
+          format: date-time
+          nullable: true
+        received_at:
+          type: string
+          format: date-time
+          nullable: true
+        retry_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        event_key:
+          type: string
+          maxLength: 80
+        last_error:
+          type: string
+        next_retry_at:
+          type: string
+          format: date-time
+          nullable: true
+        vendor:
+          type: integer
+          nullable: true
+        user:
+          type: integer
+          nullable: true
+      required:
+      - channel
+      - created_at
+      - direction
+      - id
+      - idempotency_key
+      - object_id
+      - object_type
+      - updated_at
+    IntegrationMessageDirectionEnum:
+      enum:
+      - OUTBOUND
+      - INBOUND
+      type: string
+      description: |-
+        * `OUTBOUND` - Outbound
+        * `INBOUND` - Inbound
+    ItemStatusEnum:
+      enum:
+      - DRAFT
+      - PENDING
+      - APPROVED
+      - REJECTED
+      - CHANGES_REQUESTED
+      - SUPERSEDED
+      type: string
+      description: |-
+        * `DRAFT` - Draft
+        * `PENDING` - Pending
+        * `APPROVED` - Approved
+        * `REJECTED` - Rejected
+        * `CHANGES_REQUESTED` - Changes requested
+        * `SUPERSEDED` - Superseded
+    KindEnum:
+      enum:
+      - POD
+      - LR
+      - VENDOR_INVOICE
+      - PAYMENT_PROOF
+      - APPROVAL_PACKET
+      - AADHAAR
+      - PAN
+      - DRIVING_LICENSE
+      - CANCELLED_CHEQUE
+      - OTHER
+      type: string
+      description: |-
+        * `POD` - POD
+        * `LR` - LR
+        * `VENDOR_INVOICE` - Vendor invoice
+        * `PAYMENT_PROOF` - Payment proof
+        * `APPROVAL_PACKET` - Approval packet
+        * `AADHAAR` - Aadhaar
+        * `PAN` - PAN
+        * `DRIVING_LICENSE` - Driving licence
+        * `CANCELLED_CHEQUE` - Cancelled cheque
+        * `OTHER` - Other
+    Login:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          writeOnly: true
+        otp:
+          type: string
+          writeOnly: true
+      required:
+      - password
+      - username
+    NotificationPreference:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        event_key:
+          type: string
+          maxLength: 80
+        channel:
+          $ref: '#/components/schemas/ChannelEnum'
+        enabled:
+          type: boolean
+        user:
+          type: integer
+          readOnly: true
+      required:
+      - channel
+      - created_at
+      - event_key
+      - id
+      - updated_at
+      - user
+    NotificationTemplate:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        event_key:
+          type: string
+          maxLength: 80
+        channel:
+          $ref: '#/components/schemas/ChannelEnum'
+        subject_template:
+          type: string
+          maxLength: 240
+        body_template:
+          type: string
+        enabled:
+          type: boolean
+      required:
+      - body_template
+      - channel
+      - created_at
+      - event_key
+      - id
+      - updated_at
+    OTP:
+      type: object
+      properties:
+        otp:
+          type: string
+          maxLength: 6
+          minLength: 6
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - otp
+    OrganizationSettings:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 150
+        currency:
+          type: string
+          maxLength: 3
+        timezone:
+          type: string
+          maxLength: 64
+        default_advance_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        default_tds_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        default_tds_policy:
+          $ref: '#/components/schemas/TDSPolicyEnum'
+        allow_self_approval:
+          type: boolean
+        require_payment_proof:
+          type: boolean
+        require_pod_for_settlement:
+          type: boolean
+        require_vendor_invoice_for_settlement:
+          type: boolean
+        comment_edit_window_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        audit_retention_days:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - updated_at
+    PaginatedApprovalBatchList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApprovalBatch'
+    PaginatedApprovalRuleList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApprovalRule'
+    PaginatedAuditLogList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLog'
+    PaginatedClientBillingList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClientBilling'
+    PaginatedClientList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Client'
+    PaginatedCommentList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+    PaginatedDocumentList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Document'
+    PaginatedDriverList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Driver'
+    PaginatedFinalTripSettlementList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinalTripSettlement'
+    PaginatedIndentList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Indent'
+    PaginatedIntegrationConnectionList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/IntegrationConnection'
+    PaginatedIntegrationMessageList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/IntegrationMessage'
+    PaginatedNotificationPreferenceList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationPreference'
+    PaginatedNotificationTemplateList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationTemplate'
+    PaginatedPaymentList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payment'
+    PaginatedTDSEntryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TDSEntry'
+    PaginatedTripList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Trip'
+    PaginatedTripRecoveryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TripRecovery'
+    PaginatedUnmappedInboundList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/UnmappedInbound'
+    PaginatedUserList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    PaginatedVehicleList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vehicle'
+    PaginatedVendorBankAccountList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/VendorBankAccount'
+    PaginatedVendorContactList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/VendorContact'
+    PaginatedVendorList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vendor'
+    PasswordChange:
+      type: object
+      properties:
+        current_password:
+          type: string
+          writeOnly: true
+        new_password:
+          type: string
+          writeOnly: true
+          minLength: 12
+      required:
+      - current_password
+      - new_password
+    PasswordResetConfirm:
+      type: object
+      properties:
+        uid:
+          type: string
+        token:
+          type: string
+        new_password:
+          type: string
+          writeOnly: true
+          minLength: 12
+      required:
+      - new_password
+      - token
+      - uid
+    PasswordResetRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+      - email
+    PatchedApprovalRule:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        stages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApprovalStage'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        branch:
+          type: string
+          maxLength: 100
+        purpose:
+          type: string
+          maxLength: 30
+        min_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        max_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        conditions: {}
+        active:
+          type: boolean
+        client:
+          type: integer
+          nullable: true
+    PatchedClient:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        code:
+          type: string
+          maxLength: 20
+        name:
+          type: string
+          maxLength: 150
+        active:
+          type: boolean
+        default_branch:
+          type: string
+          maxLength: 100
+        billing_settings: {}
+    PatchedClientBilling:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        trip_no:
+          type: string
+          readOnly: true
+        gross_profit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+        margin_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,7}(?:\.\d{0,2})?$
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        billing_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        invoice_no:
+          type: string
+          maxLength: 100
+        invoice_date:
+          type: string
+          format: date
+          nullable: true
+        payment_status:
+          $ref: '#/components/schemas/PaymentStatusEnum'
+        received_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        internal_trip_costs:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        notes:
+          type: string
+        trip:
+          type: integer
+        client:
+          type: integer
+          readOnly: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+    PatchedComment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        object_type:
+          type: string
+          maxLength: 60
+        object_id:
+          type: string
+          maxLength: 80
+        author:
+          type: integer
+          readOnly: true
+        author_name:
+          type: string
+          readOnly: true
+        body:
+          type: string
+        visibility:
+          $ref: '#/components/schemas/VisibilityEnum'
+        parent:
+          type: integer
+          nullable: true
+        mentions:
+          type: array
+          items:
+            type: integer
+        attachments:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        edit_history:
+          readOnly: true
+        edited_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedDriver:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        vendor_name:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        phone:
+          type: string
+          maxLength: 30
+        active:
+          type: boolean
+        vendor:
+          type: integer
+          nullable: true
+    PatchedFinalTripSettlement:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        trip_no:
+          type: string
+          readOnly: true
+        missing_documents:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        final_freight:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        additive_charges:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        vendor_deductions:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        total_vendor_gross_cost:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+        total_tds_required:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+        total_tds_deducted:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+        total_net_vendor_payable:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+        total_cash_paid:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+        remaining_cash_payable:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          readOnly: true
+        settlement_status:
+          allOf:
+          - $ref: '#/components/schemas/SettlementStatusEnum'
+          readOnly: true
+        calculation_snapshot:
+          readOnly: true
+        approved_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        settled_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        trip:
+          type: integer
+        settlement_approval:
+          type: integer
+          readOnly: true
+          nullable: true
+        created_by:
+          type: integer
+          readOnly: true
+          nullable: true
+    PatchedIndent:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        client_name:
+          type: string
+          readOnly: true
+        trip_count:
+          type: integer
+          readOnly: true
+        trip_numbers:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        trip_summaries:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        indent_no:
+          type: string
+          maxLength: 50
+        indent_date:
+          type: string
+          format: date
+        challan_no:
+          type: string
+          maxLength: 50
+        challan_datetime:
+          type: string
+          format: date-time
+          nullable: true
+        branch:
+          type: string
+          maxLength: 100
+        cost_center:
+          type: string
+          maxLength: 100
+        origin:
+          type: string
+          maxLength: 150
+        destination:
+          type: string
+          maxLength: 150
+        ship_to_party_code:
+          type: string
+          maxLength: 60
+        ship_to_party_name:
+          type: string
+          maxLength: 180
+        ship_to_address:
+          type: string
+        destination_state:
+          type: string
+          maxLength: 80
+        pin_code:
+          type: string
+          maxLength: 12
+        item:
+          type: string
+          maxLength: 120
+        default_quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,11}(?:\.\d{0,3})?$
+          nullable: true
+        quantity_ltrs:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,11}(?:\.\d{0,3})?$
+          nullable: true
+        reporting_datetime:
+          type: string
+          format: date-time
+          nullable: true
+        expected_delivery_date:
+          type: string
+          format: date
+          nullable: true
+        uom_ltrs:
+          type: string
+          maxLength: 40
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,11}(?:\.\d{0,3})?$
+          nullable: true
+        total_load:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,11}(?:\.\d{0,3})?$
+          nullable: true
+        required_vehicle_type:
+          type: string
+          maxLength: 80
+        customer_reference:
+          type: string
+          maxLength: 100
+        notes:
+          type: string
+        status:
+          $ref: '#/components/schemas/IndentStatusEnum'
+        client:
+          type: integer
+    PatchedNotificationPreference:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        event_key:
+          type: string
+          maxLength: 80
+        channel:
+          $ref: '#/components/schemas/ChannelEnum'
+        enabled:
+          type: boolean
+        user:
+          type: integer
+          readOnly: true
+    PatchedNotificationTemplate:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        event_key:
+          type: string
+          maxLength: 80
+        channel:
+          $ref: '#/components/schemas/ChannelEnum'
+        subject_template:
+          type: string
+          maxLength: 240
+        body_template:
+          type: string
+        enabled:
+          type: boolean
+    PatchedOrganizationSettings:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 150
+        currency:
+          type: string
+          maxLength: 3
+        timezone:
+          type: string
+          maxLength: 64
+        default_advance_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        default_tds_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        default_tds_policy:
+          $ref: '#/components/schemas/TDSPolicyEnum'
+        allow_self_approval:
+          type: boolean
+        require_payment_proof:
+          type: boolean
+        require_pod_for_settlement:
+          type: boolean
+        require_vendor_invoice_for_settlement:
+          type: boolean
+        comment_edit_window_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        audit_retention_days:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedTrip:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        client_name:
+          type: string
+          readOnly: true
+        indent_no:
+          type: string
+          readOnly: true
+        vendor_name:
+          type: string
+          readOnly: true
+        vehicle_no:
+          type: string
+          readOnly: true
+        driver_name:
+          type: string
+          readOnly: true
+        charges:
+          type: array
+          items:
+            $ref: '#/components/schemas/TripCharge'
+          readOnly: true
+        calculation:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        indent_ids:
+          type: array
+          items:
+            type: integer
+            writeOnly: true
+          writeOnly: true
+        indent_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/Indent'
+          readOnly: true
+        indent_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        trip_no:
+          type: string
+          readOnly: true
+        origin:
+          type: string
+          maxLength: 150
+        destination:
+          type: string
+          maxLength: 150
+        deployment_date:
+          type: string
+          format: date
+        expected_delivery_date:
+          type: string
+          format: date
+          nullable: true
+        actual_delivery_at:
+          type: string
+          format: date-time
+          nullable: true
+        uom_ltrs:
+          type: string
+          maxLength: 40
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,11}(?:\.\d{0,3})?$
+          nullable: true
+        total_load:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,11}(?:\.\d{0,3})?$
+          nullable: true
+        vehicle_registration_snapshot:
+          type: string
+          readOnly: true
+        vehicle_type_snapshot:
+          type: string
+          readOnly: true
+        driver_name_snapshot:
+          type: string
+          readOnly: true
+        driver_phone_snapshot:
+          type: string
+          readOnly: true
+        vendor_freight_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        advance_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        client_billing_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        status:
+          $ref: '#/components/schemas/TripStatusEnum'
+        pod_status:
+          type: string
+          maxLength: 30
+        settlement_status:
+          type: string
+          maxLength: 30
+        branch:
+          type: string
+          maxLength: 100
+        cost_center:
+          type: string
+          maxLength: 100
+        notes:
+          type: string
+        indent:
+          type: integer
+        client:
+          type: integer
+        vendor:
+          type: integer
+        vehicle:
+          type: integer
+        driver:
+          type: integer
+        indents:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+    PatchedUser:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        whatsapp_phone:
+          type: string
+          maxLength: 15
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        vendor:
+          type: integer
+          nullable: true
+        vendor_name:
+          type: string
+          readOnly: true
+        is_active:
+          type: boolean
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
+        mfa_enabled:
+          type: boolean
+          readOnly: true
+        password:
+          type: string
+          writeOnly: true
+          minLength: 12
+    PatchedVehicle:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        vendor_name:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        registration_no:
+          type: string
+          maxLength: 25
+        vehicle_type:
+          type: string
+          maxLength: 80
+        capacity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+          nullable: true
+        active:
+          type: boolean
+        notes:
+          type: string
+        vendor:
+          type: integer
+    PatchedVendor:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        vehicles_count:
+          type: integer
+          readOnly: true
+        contacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/VendorContact'
+          readOnly: true
+        bank_accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/VendorBankAccount'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        vendor_code:
+          type: string
+          maxLength: 30
+        legal_name:
+          type: string
+          maxLength: 180
+        display_name:
+          type: string
+          maxLength: 150
+        status:
+          $ref: '#/components/schemas/VendorStatusEnum'
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        primary_contact_name:
+          type: string
+          maxLength: 120
+        primary_phone:
+          type: string
+          maxLength: 30
+        address:
+          type: string
+        tax_identifier:
+          type: string
+          maxLength: 30
+        default_tds_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+        default_tds_policy:
+          oneOf:
+          - $ref: '#/components/schemas/TDSPolicyEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        payment_terms:
+          type: string
+          maxLength: 120
+        notes:
+          type: string
+        blocked_reason:
+          type: string
+    PatchedVendorBankAccount:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        vendor:
+          type: integer
+        bank_name:
+          type: string
+          maxLength: 120
+        account_holder:
+          type: string
+          maxLength: 150
+        account_number:
+          type: string
+          writeOnly: true
+          minLength: 4
+        masked_account_number:
+          type: string
+          readOnly: true
+        ifsc_code:
+          type: string
+          maxLength: 20
+        cancelled_cheque_uploaded:
+          type: boolean
+          readOnly: true
+        active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedVendorContact:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 30
+        receives_email:
+          type: boolean
+        receives_whatsapp:
+          type: boolean
+        vendor:
+          type: integer
+    Payment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        vendor_name:
+          type: string
+          readOnly: true
+        allocations:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentAllocation'
+          readOnly: true
+        duplicate_utr_warning:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        payment_no:
+          type: string
+          maxLength: 30
+        payment_date:
+          type: string
+          format: date
+        payment_mode:
+          type: string
+          maxLength: 30
+        utr_reference:
+          type: string
+          maxLength: 100
+        gross_allocated_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,2})?$
+        tds_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,2})?$
+        net_paid_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,14}(?:\.\d{0,2})?$
+        status:
+          $ref: '#/components/schemas/PaymentStatusEnum'
+        remarks:
+          type: string
+        reversal_reason:
+          type: string
+        paid_at:
+          type: string
+          format: date-time
+          nullable: true
+        vendor:
+          type: integer
+        bank_account:
+          type: integer
+          nullable: true
+        proof_document:
+          type: integer
+          nullable: true
+        created_by:
+          type: integer
+        paid_by:
+          type: integer
+          nullable: true
+      required:
+      - allocations
+      - created_at
+      - created_by
+      - duplicate_utr_warning
+      - gross_allocated_amount
+      - id
+      - net_paid_amount
+      - payment_date
+      - tds_amount
+      - updated_at
+      - utr_reference
+      - vendor
+      - vendor_name
+    PaymentAllocation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        trip_no:
+          type: string
+          readOnly: true
+        approval_no:
+          type: string
+          readOnly: true
+        gross_amount_allocated:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        tds_allocated:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        net_cash_allocated:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        payment:
+          type: integer
+        approval_item:
+          type: integer
+        trip:
+          type: integer
+      required:
+      - approval_item
+      - approval_no
+      - created_at
+      - gross_amount_allocated
+      - id
+      - net_cash_allocated
+      - payment
+      - tds_allocated
+      - trip
+      - trip_no
+    PaymentCreate:
+      type: object
+      properties:
+        vendor:
+          type: integer
+          minimum: 1
+        payment_date:
+          type: string
+          format: date
+        bank_account:
+          type: integer
+          nullable: true
+        payment_mode:
+          type: string
+          default: BANK_TRANSFER
+        utr_reference:
+          type: string
+          maxLength: 100
+        remarks:
+          type: string
+          default: ''
+        proof_document:
+          type: integer
+          nullable: true
+        allocations:
+          type: array
+          items:
+            $ref: '#/components/schemas/AllocationInput'
+      required:
+      - allocations
+      - payment_date
+      - utr_reference
+      - vendor
+    PaymentStatusEnum:
+      enum:
+      - DRAFT
+      - INVOICED
+      - PARTIALLY_RECEIVED
+      - RECEIVED
+      type: string
+      description: |-
+        * `DRAFT` - Draft
+        * `INVOICED` - Invoiced
+        * `PARTIALLY_RECEIVED` - Partially received
+        * `RECEIVED` - Received
+    ProviderEnum:
+      enum:
+      - SMTP
+      - WHATSAPP
+      type: string
+      description: |-
+        * `SMTP` - SMTP email
+        * `WHATSAPP` - WhatsApp
+    PurposeEnum:
+      enum:
+      - ADVANCE
+      - FINAL_SETTLEMENT
+      - OTHER
+      type: string
+      description: |-
+        * `ADVANCE` - ADVANCE
+        * `FINAL_SETTLEMENT` - FINAL_SETTLEMENT
+        * `OTHER` - OTHER
+    ResolutionMethodEnum:
+      enum:
+      - REFUND
+      - ADJUST_AGAINST_FUTURE_TRIP
+      - WRITE_OFF_WITH_APPROVAL
+      - OTHER
+      type: string
+      description: |-
+        * `REFUND` - Refund
+        * `ADJUST_AGAINST_FUTURE_TRIP` - Adjust against future trip
+        * `WRITE_OFF_WITH_APPROVAL` - Write off with approval
+        * `OTHER` - Other
+    RoleEnum:
+      enum:
+      - OPERATIONS
+      - APPROVER
+      - FINANCE
+      - MANAGEMENT
+      - TRANSPORTER
+      - ADMIN
+      type: string
+      description: |-
+        * `OPERATIONS` - Operations
+        * `APPROVER` - Approver
+        * `FINANCE` - Finance
+        * `MANAGEMENT` - Management
+        * `TRANSPORTER` - Transporter
+        * `ADMIN` - Admin
+    ScanStatusEnum:
+      enum:
+      - PENDING
+      - CLEAN
+      - REJECTED
+      type: string
+      description: |-
+        * `PENDING` - Pending
+        * `CLEAN` - Clean
+        * `REJECTED` - Rejected
+    ScopeEnum:
+      enum:
+      - BATCH
+      - ITEM
+      type: string
+      description: |-
+        * `BATCH` - Batch
+        * `ITEM` - Item
+    SettlementStatusEnum:
+      enum:
+      - DRAFT
+      - APPROVAL_PENDING
+      - APPROVED
+      - SETTLED
+      type: string
+      description: |-
+        * `DRAFT` - Draft
+        * `APPROVAL_PENDING` - Approval pending
+        * `APPROVED` - Approved
+        * `SETTLED` - Settled
+    TDSEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        vendor_name:
+          type: string
+          readOnly: true
+        trip_no:
+          type: string
+          readOnly: true
+        payment_no:
+          type: string
+          readOnly: true
+        taxable_base:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        tds_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        policy_snapshot:
+          type: string
+          maxLength: 40
+        deduction_date:
+          type: string
+          format: date
+        status:
+          type: string
+          maxLength: 20
+        finance_reference:
+          type: string
+          maxLength: 100
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        vendor:
+          type: integer
+        trip:
+          type: integer
+        payment:
+          type: integer
+      required:
+      - created_at
+      - deduction_date
+      - id
+      - payment
+      - payment_no
+      - policy_snapshot
+      - rate
+      - taxable_base
+      - tds_amount
+      - trip
+      - trip_no
+      - vendor
+      - vendor_name
+    TDSPolicyEnum:
+      enum:
+      - PER_PAYMENT_TAXABLE_AMOUNT
+      - FULL_FREIGHT_AT_FIRST_ADVANCE
+      - CUMULATIVE_TRIP_LIABILITY
+      - MANUAL_WITH_APPROVAL
+      type: string
+      description: |-
+        * `PER_PAYMENT_TAXABLE_AMOUNT` - Per payment taxable amount
+        * `FULL_FREIGHT_AT_FIRST_ADVANCE` - Full freight at first advance
+        * `CUMULATIVE_TRIP_LIABILITY` - Cumulative trip liability
+        * `MANUAL_WITH_APPROVAL` - Manual with approval
+    Trip:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        client_name:
+          type: string
+          readOnly: true
+        indent_no:
+          type: string
+          readOnly: true
+        vendor_name:
+          type: string
+          readOnly: true
+        vehicle_no:
+          type: string
+          readOnly: true
+        driver_name:
+          type: string
+          readOnly: true
+        charges:
+          type: array
+          items:
+            $ref: '#/components/schemas/TripCharge'
+          readOnly: true
+        calculation:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        indent_ids:
+          type: array
+          items:
+            type: integer
+            writeOnly: true
+          writeOnly: true
+        indent_details:
+          type: array
+          items:
+            $ref: '#/components/schemas/Indent'
+          readOnly: true
+        indent_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        trip_no:
+          type: string
+          readOnly: true
+        origin:
+          type: string
+          maxLength: 150
+        destination:
+          type: string
+          maxLength: 150
+        deployment_date:
+          type: string
+          format: date
+        expected_delivery_date:
+          type: string
+          format: date
+          nullable: true
+        actual_delivery_at:
+          type: string
+          format: date-time
+          nullable: true
+        uom_ltrs:
+          type: string
+          maxLength: 40
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,11}(?:\.\d{0,3})?$
+          nullable: true
+        total_load:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,11}(?:\.\d{0,3})?$
+          nullable: true
+        vehicle_registration_snapshot:
+          type: string
+          readOnly: true
+        vehicle_type_snapshot:
+          type: string
+          readOnly: true
+        driver_name_snapshot:
+          type: string
+          readOnly: true
+        driver_phone_snapshot:
+          type: string
+          readOnly: true
+        vendor_freight_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        advance_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        client_billing_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          nullable: true
+        status:
+          $ref: '#/components/schemas/TripStatusEnum'
+        pod_status:
+          type: string
+          maxLength: 30
+        settlement_status:
+          type: string
+          maxLength: 30
+        branch:
+          type: string
+          maxLength: 100
+        cost_center:
+          type: string
+          maxLength: 100
+        notes:
+          type: string
+        indent:
+          type: integer
+        client:
+          type: integer
+        vendor:
+          type: integer
+        vehicle:
+          type: integer
+        driver:
+          type: integer
+        indents:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+      required:
+      - calculation
+      - charges
+      - client
+      - client_name
+      - created_at
+      - deployment_date
+      - destination
+      - driver
+      - driver_name
+      - driver_name_snapshot
+      - driver_phone_snapshot
+      - id
+      - indent
+      - indent_count
+      - indent_details
+      - indent_no
+      - indents
+      - origin
+      - trip_no
+      - updated_at
+      - vehicle
+      - vehicle_no
+      - vehicle_registration_snapshot
+      - vehicle_type_snapshot
+      - vendor
+      - vendor_freight_rate
+      - vendor_name
+    TripCharge:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        charge_type:
+          $ref: '#/components/schemas/ChargeTypeEnum'
+        description:
+          type: string
+          maxLength: 200
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        direction:
+          $ref: '#/components/schemas/TripChargeDirectionEnum'
+        advance_eligible:
+          type: boolean
+        tds_eligible:
+          type: boolean
+        source:
+          $ref: '#/components/schemas/TripChargeSourceEnum'
+        trip:
+          type: integer
+        created_by:
+          type: integer
+          readOnly: true
+      required:
+      - amount
+      - charge_type
+      - created_at
+      - created_by
+      - id
+      - trip
+      - updated_at
+    TripChargeDirectionEnum:
+      enum:
+      - ADD
+      - DEDUCT
+      type: string
+      description: |-
+        * `ADD` - Add
+        * `DEDUCT` - Deduct
+    TripChargeSourceEnum:
+      enum:
+      - INITIAL
+      - FINAL_SETTLEMENT
+      - MANUAL_ADJUSTMENT
+      type: string
+      description: |-
+        * `INITIAL` - Initial
+        * `FINAL_SETTLEMENT` - Final settlement
+        * `MANUAL_ADJUSTMENT` - Manual adjustment
+    TripRecovery:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        trip_no:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        resolution_method:
+          $ref: '#/components/schemas/ResolutionMethodEnum'
+        reference:
+          type: string
+          maxLength: 120
+        reason:
+          type: string
+        status:
+          allOf:
+          - $ref: '#/components/schemas/TripRecoveryStatusEnum'
+          readOnly: true
+        resolved_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        trip:
+          type: integer
+        created_by:
+          type: integer
+          readOnly: true
+        resolved_by:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - amount
+      - created_at
+      - created_by
+      - id
+      - reason
+      - resolution_method
+      - resolved_at
+      - resolved_by
+      - status
+      - trip
+      - trip_no
+      - updated_at
+    TripRecoveryStatusEnum:
+      enum:
+      - OPEN
+      - RESOLVED
+      type: string
+      description: |-
+        * `OPEN` - Open
+        * `RESOLVED` - Resolved
+    TripStatusEnum:
+      enum:
+      - DRAFT
+      - READY
+      - ADVANCE_APPROVAL_PENDING
+      - ADVANCE_APPROVED
+      - ADVANCE_PARTIALLY_PAID
+      - ADVANCE_PAID
+      - DEPLOYED
+      - IN_TRANSIT
+      - DELIVERED
+      - SETTLEMENT_PENDING
+      - SETTLEMENT_APPROVAL_PENDING
+      - SETTLED
+      - CANCELLED
+      - CANCELLED_WITH_PAYMENT
+      type: string
+      description: |-
+        * `DRAFT` - Draft
+        * `READY` - Ready
+        * `ADVANCE_APPROVAL_PENDING` - Advance approval pending
+        * `ADVANCE_APPROVED` - Advance approved
+        * `ADVANCE_PARTIALLY_PAID` - Advance partially paid
+        * `ADVANCE_PAID` - Advance paid
+        * `DEPLOYED` - Deployed
+        * `IN_TRANSIT` - In transit
+        * `DELIVERED` - Delivered
+        * `SETTLEMENT_PENDING` - Settlement pending
+        * `SETTLEMENT_APPROVAL_PENDING` - Settlement approval pending
+        * `SETTLED` - Settled
+        * `CANCELLED` - Cancelled
+        * `CANCELLED_WITH_PAYMENT` - Cancelled with payment
+    UnmappedInbound:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        message_detail:
+          allOf:
+          - $ref: '#/components/schemas/IntegrationMessage'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        reason:
+          type: string
+          maxLength: 240
+        resolved_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        message:
+          type: integer
+        resolved_by:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - created_at
+      - id
+      - message
+      - message_detail
+      - reason
+      - resolved_at
+      - resolved_by
+      - updated_at
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        whatsapp_phone:
+          type: string
+          maxLength: 15
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        vendor:
+          type: integer
+          nullable: true
+        vendor_name:
+          type: string
+          readOnly: true
+        is_active:
+          type: boolean
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
+        mfa_enabled:
+          type: boolean
+          readOnly: true
+        password:
+          type: string
+          writeOnly: true
+          minLength: 12
+      required:
+      - id
+      - mfa_enabled
+      - username
+      - vendor_name
+    Vehicle:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        vendor_name:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        registration_no:
+          type: string
+          maxLength: 25
+        vehicle_type:
+          type: string
+          maxLength: 80
+        capacity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+          nullable: true
+        active:
+          type: boolean
+        notes:
+          type: string
+        vendor:
+          type: integer
+      required:
+      - created_at
+      - id
+      - registration_no
+      - updated_at
+      - vehicle_type
+      - vendor
+      - vendor_name
+    Vendor:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        vehicles_count:
+          type: integer
+          readOnly: true
+        contacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/VendorContact'
+          readOnly: true
+        bank_accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/VendorBankAccount'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        vendor_code:
+          type: string
+          maxLength: 30
+        legal_name:
+          type: string
+          maxLength: 180
+        display_name:
+          type: string
+          maxLength: 150
+        status:
+          $ref: '#/components/schemas/VendorStatusEnum'
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        primary_contact_name:
+          type: string
+          maxLength: 120
+        primary_phone:
+          type: string
+          maxLength: 30
+        address:
+          type: string
+        tax_identifier:
+          type: string
+          maxLength: 30
+        default_tds_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+        default_tds_policy:
+          oneOf:
+          - $ref: '#/components/schemas/TDSPolicyEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        payment_terms:
+          type: string
+          maxLength: 120
+        notes:
+          type: string
+        blocked_reason:
+          type: string
+      required:
+      - bank_accounts
+      - contacts
+      - created_at
+      - display_name
+      - id
+      - legal_name
+      - updated_at
+      - vehicles_count
+      - vendor_code
+    VendorBankAccount:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        vendor:
+          type: integer
+        bank_name:
+          type: string
+          maxLength: 120
+        account_holder:
+          type: string
+          maxLength: 150
+        account_number:
+          type: string
+          writeOnly: true
+          minLength: 4
+        masked_account_number:
+          type: string
+          readOnly: true
+        ifsc_code:
+          type: string
+          maxLength: 20
+        cancelled_cheque_uploaded:
+          type: boolean
+          readOnly: true
+        active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - account_holder
+      - bank_name
+      - cancelled_cheque_uploaded
+      - created_at
+      - id
+      - ifsc_code
+      - masked_account_number
+      - updated_at
+      - vendor
+    VendorContact:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 30
+        receives_email:
+          type: boolean
+        receives_whatsapp:
+          type: boolean
+        vendor:
+          type: integer
+      required:
+      - created_at
+      - id
+      - name
+      - updated_at
+      - vendor
+    VendorStatusEnum:
+      enum:
+      - ACTIVE
+      - HOLD
+      - INACTIVE
+      type: string
+      description: |-
+        * `ACTIVE` - Active
+        * `HOLD` - On hold
+        * `INACTIVE` - Inactive
+    VisibilityEnum:
+      enum:
+      - INTERNAL
+      - TRANSPORTER_VISIBLE
+      type: string
+      description: |-
+        * `INTERNAL` - Internal
+        * `TRANSPORTER_VISIBLE` - Transporter visible
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

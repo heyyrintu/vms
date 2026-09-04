@@ -1,0 +1,25 @@
+services:
+  api:
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 60 --access-logfile -
+    restart: unless-stopped
+    volumes: []
+    environment:
+      DJANGO_DEBUG: "false"
+      USE_S3_STORAGE: "true"
+  worker:
+    restart: unless-stopped
+    volumes: []
+    environment:
+      DJANGO_DEBUG: "false"
+      USE_S3_STORAGE: "true"
+  beat:
+    restart: unless-stopped
+    volumes: []
+    environment:
+      DJANGO_DEBUG: "false"
+  web:
+    restart: unless-stopped
+  postgres:
+    restart: unless-stopped
+  redis:
+    restart: unless-stopped
