@@ -24,9 +24,10 @@ object storage to managed services before reducing malware-scanning capacity.
    `/docker-compose.coolify.yml`.
 4. Use normal (not Raw) Compose deployment so Coolify can generate its network,
    credentials, and proxy configuration.
-5. In Advanced build settings, leave source-commit build-arg injection disabled to
-   preserve Docker layer caching. The compose file supplies the only required web
-   build argument.
+5. In Advanced build settings, disable **Inject Build Args to Dockerfile**,
+   **Use Docker Build Secrets**, and **Include Source Commit in Build**. The
+   compose file supplies the only required web build argument (`API_INTERNAL_URL`).
+   This project's image builds do not need production credentials.
 
 Do not combine this file with `docker-compose.yml` or `docker-compose.prod.yml`.
 Those files are retained for local development and non-Coolify deployments.
@@ -38,6 +39,20 @@ committing a production `.env` file. Variables using the `${NAME:?message}` form
 required and Coolify will flag them when empty. The five `SERVICE_USER_*` and
 `SERVICE_PASSWORD_*` values are Coolify magic variables and should be allowed to
 generate once; do not regenerate them after data exists.
+
+For this Git-based Compose deployment, enable both **Build Variable** and
+**Runtime Variable** for the variables referenced in the Compose file, including
+the five generated service credentials. Coolify invokes `docker compose build`
+with `/artifacts/build-time.env`; Compose resolves the entire configuration before
+building, including runtime `environment:` entries. Runtime-only values can
+therefore cause `APP_URL is missing a value` or unset service-password errors at
+this stage even when the values are saved in Coolify.
+
+Keep automatic Dockerfile argument injection and build-secret rewriting disabled
+as described above. Making values available for Compose interpolation does not
+require passing them into Dockerfile instructions. In the affected Coolify
+deployment, build-secret rewriting repeatedly modified the shared API Dockerfile
+for multiple services and ended with `posix_spawn(): Argument list too long`.
 
 Generate the application secrets locally:
 
