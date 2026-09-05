@@ -287,6 +287,7 @@ class TripRecoverySerializer(serializers.ModelSerializer):
 
 
 class TripSerializer(serializers.ModelSerializer):
+    active_approval = serializers.SerializerMethodField()
     client_name = serializers.CharField(source="client.name", read_only=True)
     indent_no = serializers.CharField(source="indent.indent_no", read_only=True)
     vendor_name = serializers.CharField(source="vendor.display_name", read_only=True)
@@ -312,6 +313,16 @@ class TripSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+    @extend_schema_field(serializers.DictField(allow_null=True))
+    def get_active_approval(self, obj):
+        # Use the prefetched items; READY alone does not mean the trip is unlocked.
+        for item in obj.approval_items.all():
+            if item.item_status not in {"REJECTED", "CHANGES_REQUESTED", "SUPERSEDED"}:
+                request = self.context.get("request")
+                can_open = not request or request.user.role != "OPERATIONS" or item.batch.requested_by_id == request.user.pk
+                return {"id": item.batch_id if can_open else None, "approval_no": item.batch.approval_no, "status": item.batch.status}
+        return None
 
     @extend_schema_field(serializers.IntegerField())
     def get_indent_count(self, obj):

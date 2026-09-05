@@ -131,6 +131,16 @@ def create_approval_batch(*, actor, trips, purpose="ADVANCE", request_id=""):
             raise ValueError(f"Vendor {trip.vendor.display_name} is not active")
         if trip.status not in {Trip.Status.READY, Trip.Status.DRAFT}:
             raise ValueError(f"Trip {trip.trip_no} is not eligible for approval")
+        active = trip.approval_items.exclude(item_status__in=[
+            PaymentApprovalItem.Status.REJECTED,
+            PaymentApprovalItem.Status.CHANGES_REQUESTED,
+            PaymentApprovalItem.Status.SUPERSEDED,
+        ]).select_related("batch").first()
+        if active:
+            raise ValueError(
+                f"Trip {trip.trip_no} already belongs to approval {active.batch.approval_no}. "
+                "Open the existing approval from the approval inbox; submit it if it is a draft."
+            )
     previous, revision_no, revision_diff = _revision_context(trips, purpose)
     batch = PaymentApprovalBatch.objects.create(
         client=trips[0].client,

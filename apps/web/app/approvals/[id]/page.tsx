@@ -16,6 +16,14 @@ export default function ApprovalDetailPage() {
   const [reason, setReason] = useState("");
   const batch = useQuery({ queryKey: ["approval", id], queryFn: () => api<Approval>(`/approval-batches/${id}/`) });
   const me = useQuery({ queryKey: ["me"], queryFn: () => api<User>("/auth/me/") });
+  const submission = useMutation({
+    mutationFn: () => api<Approval>(`/approval-batches/${id}/submit/`, { method: "POST", body: "{}" }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["approval", id], data);
+      queryClient.invalidateQueries({ queryKey: ["approvals"] });
+      queryClient.invalidateQueries({ queryKey: ["eligible-trips"] });
+    },
+  });
   const decision = useMutation({
     mutationFn: (value: string) => api<Approval>(`/approval-batches/${id}/decide/`, { method: "POST", body: JSON.stringify({ decision: value, item_ids: selected.length ? selected : undefined, comment: reason }) }),
     onSuccess: (data) => { queryClient.setQueryData(["approval", id], data); setSelected([]); setReason(""); queryClient.invalidateQueries({ queryKey: ["approvals"] }); },
@@ -28,6 +36,11 @@ export default function ApprovalDetailPage() {
   return <>
     <PageHeader title={b.approval_no} description={`${b.client_name} · ${b.purpose.replaceAll("_", " ")} · Revision ${b.revision_no}`}><StatusBadge value={b.status} /></PageHeader>
     {decision.error && <ErrorNotice error={decision.error} />}
+    {submission.error && <ErrorNotice error={submission.error} />}
+    {b.status === "DRAFT" && (me.data?.id === b.requested_by || me.data?.role === "ADMIN") && <div className="notice">
+      This draft has not been sent for approval. Review the saved amounts below, then submit it.
+      <div className="actions"><button className="button primary" disabled={submission.isPending} onClick={() => submission.mutate()}>{submission.isPending ? "Submitting…" : "Submit draft approval"}</button></div>
+    </div>}
     <div className="summary-strip"><div><span>Trip lines</span><strong>{b.items.length}</strong></div><div><span>Gross request</span><strong><Money value={b.gross_requested} /></strong></div><div><span>TDS withholding</span><strong><Money value={b.tds_requested} /></strong></div><div><span>Net cash request</span><strong><Money value={b.net_requested} /></strong></div></div>
     <section className="panel"><div className="panel-head"><h2>{b.approval_rule_snapshot.rule_name || "Approval stages"}</h2><span className="eyebrow">Current stage {b.current_stage}</span></div><div className="table-wrap"><table><thead><tr><th>Sequence</th><th>Stage</th><th>Role</th><th>Decision</th></tr></thead><tbody>{b.stage_decisions.map((row) => <tr key={row.id}><td>{row.sequence}</td><td>{row.label}</td><td>{row.role}</td><td><StatusBadge value={row.status} /> {row.decided_by_name}</td></tr>)}</tbody></table></div>{b.revision_diff.length > 0 && <div className="panel-body notice"><strong>Revision changes</strong>{b.revision_diff.map((row, index) => <div key={index}>{row.field}: {row.old || "—"} → {row.new}</div>)}</div>}</section>
     <div className="split"><div>

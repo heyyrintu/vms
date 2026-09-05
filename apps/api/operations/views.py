@@ -293,7 +293,7 @@ class TripViewSet(AuditedModelViewSet):
             queryset = queryset.filter(deployment_date__gte=date_from)
         if date_to:
             queryset = queryset.filter(deployment_date__lte=date_to)
-        return queryset.distinct()
+        return queryset.prefetch_related("approval_items__batch").distinct()
 
     def perform_update(self, serializer):
         if serializer.instance.status == Trip.Status.SETTLED:

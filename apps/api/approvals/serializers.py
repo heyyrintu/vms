@@ -157,6 +157,7 @@ class ApprovalBatchSerializer(serializers.ModelSerializer):
 
 
 class ApprovalBatchCreateSerializer(serializers.Serializer):
+    submit = serializers.BooleanField(default=False, write_only=True)
     trip_ids = serializers.ListField(child=serializers.IntegerField(min_value=1), min_length=1)
     purpose = serializers.ChoiceField(choices=["ADVANCE", "FINAL_SETTLEMENT", "OTHER"], default="ADVANCE")
 

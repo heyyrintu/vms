@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework import status, viewsets
@@ -74,10 +75,13 @@ class ApprovalBatchViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         return ApprovalBatchCreateSerializer if self.action == "create" else ApprovalBatchSerializer
 
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         batch = serializer.save()
+        if serializer.validated_data.get("submit"):
+            batch = submit_batch(batch=batch, actor=request.user, request_id=getattr(request, "request_id", ""))
         return Response(ApprovalBatchSerializer(batch, context={"request": request}).data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["post"])

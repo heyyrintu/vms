@@ -1,9 +1,17 @@
+function errorMessages(data: unknown, field = ""): string[] {
+  if (typeof data === "string") return data.trim() ? [field ? `${field.replaceAll("_", " ")}: ${data}` : data] : [];
+  if (Array.isArray(data)) return data.flatMap((value) => errorMessages(value, field));
+  if (data && typeof data === "object") return Object.entries(data).flatMap(([key, value]) =>
+    errorMessages(value, ["detail", "non_field_errors", "__all__"].includes(key) ? field : field ? `${field}.${key}` : key));
+  return [];
+}
+
 export class ApiError extends Error {
   status: number;
   data: unknown;
 
   constructor(status: number, data: unknown) {
-    super(typeof data === "object" && data && "detail" in data ? String((data as { detail: unknown }).detail) : `Request failed (${status})`);
+    super(errorMessages(data).join("; ") || `Request failed (${status})`);
     this.status = status;
     this.data = data;
   }
