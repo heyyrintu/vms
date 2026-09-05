@@ -189,13 +189,14 @@ class FinancePendingView(APIView):
             return Response({"detail": "Finance permission is required"}, status=403)
         items = list(
             PaymentApprovalItem.objects.filter(item_status=PaymentApprovalItem.Status.APPROVED)
+            .exclude(trip__status__in=[Trip.Status.CANCELLED, Trip.Status.CANCELLED_WITH_PAYMENT, Trip.Status.SETTLED])
             .select_related("vendor", "trip", "trip__vehicle", "trip__driver", "trip__client", "batch")
             .order_by("batch__updated_at", "id")
         )
         eligible_items = []
         for item in items:
             paid = paid_totals(item)
-            if item.net_requested - paid["net"] > 0:
+            if item.gross_requested - paid["gross"] > 0:
                 eligible_items.append((item, paid))
 
         vendor_ids = {item.vendor_id for item, _paid in eligible_items}
@@ -337,10 +338,12 @@ class FinalTripSettlementViewSet(viewsets.ModelViewSet):
 
     def partial_update(self, request, *args, **kwargs):
         current = self.get_object()
+        serializer = self.get_serializer(current, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
         values = {
-            "final_freight": request.data.get("final_freight", current.final_freight),
-            "additive_charges": request.data.get("additive_charges", current.additive_charges),
-            "vendor_deductions": request.data.get("vendor_deductions", current.vendor_deductions),
+            "final_freight": serializer.validated_data.get("final_freight", current.final_freight),
+            "additive_charges": serializer.validated_data.get("additive_charges", current.additive_charges),
+            "vendor_deductions": serializer.validated_data.get("vendor_deductions", current.vendor_deductions),
         }
         settlement = save_settlement(
             actor=request.user,

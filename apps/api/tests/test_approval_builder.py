@@ -2,8 +2,8 @@ import pytest
 from rest_framework.test import APIClient
 
 from accounts.models import User
-from approvals.services import create_approval_batch
 from approvals.models import PaymentApprovalBatch
+from approvals.services import create_approval_batch
 from operations.models import Trip
 
 

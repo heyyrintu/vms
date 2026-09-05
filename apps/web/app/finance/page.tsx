@@ -81,7 +81,7 @@ function VendorPaymentGroup({ group, refresh }: { group: PendingGroup; refresh: 
   };
 
   return <section className="panel">
-    <div className="panel-head"><div><h2>{group.vendor_name}</h2><span className="muted">{group.vendor_code} · {group.vendor_legal_name} · <Money value={group.total_net} /> pending</span></div><span className="badge blue">{group.items.length} approved lines</span></div>
+    <div className="panel-head"><div><h2>{group.vendor_name}</h2><span className="muted">{group.vendor_code} · {group.vendor_legal_name} · Cash <Money value={group.total_net} /> · TDS <Money value={group.items.reduce((sum, item) => sum + Number(item.remaining_tds), 0)} /> pending</span></div><span className="badge blue">{group.items.length} approved lines</span></div>
     {Boolean(error) && <div className="panel-body"><ErrorNotice error={error} /></div>}
     <div className="panel-body split">
       <div><h3>Vendor verification</h3><p className="muted">{group.vendor_email || "No email"} · {group.vendor_phone || "No phone"}</p><Documents documents={group.vendor_documents} empty="No clean vendor Aadhaar/PAN documents uploaded." /></div>

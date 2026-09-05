@@ -32,6 +32,9 @@ class AuditLog(models.Model):
     def save(self, *args, **kwargs):
         if self.pk:
             raise ValueError("Audit logs are append-only")
+        # Persist the same JSON-safe values that are hashed, including dates/Decimals.
+        self.before = json.loads(json.dumps(self.before, default=str))
+        self.after = json.loads(json.dumps(self.after, default=str))
         with transaction.atomic():
             previous = AuditLog.objects.select_for_update().order_by("-id").first()
             self.previous_hash = previous.entry_hash if previous else ""
@@ -69,4 +72,3 @@ def record_audit(*, actor, action, instance, before=None, after=None, request_id
         request_id=request_id,
         source=source,
     )
-

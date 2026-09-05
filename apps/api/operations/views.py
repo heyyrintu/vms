@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models import Q, Sum
 from django.http import FileResponse
 from django.utils import timezone
@@ -410,10 +411,13 @@ class TripViewSet(AuditedModelViewSet):
         return Response(self.get_serializer(trip).data)
 
     @action(detail=True, methods=["post"])
+    @transaction.atomic
     def deliver(self, request, pk=None):
-        trip = self.get_object()
+        trip = Trip.objects.select_for_update().get(pk=self.get_object().pk)
         if trip.status in {Trip.Status.CANCELLED, Trip.Status.CANCELLED_WITH_PAYMENT, Trip.Status.SETTLED}:
             return Response({"detail": "This trip cannot be marked delivered"}, status=400)
+        if trip.actual_delivery_at:
+            return Response(self.get_serializer(trip).data)
         trip.status = Trip.Status.DELIVERED
         trip.actual_delivery_at = timezone.now()
         trip.settlement_status = "PENDING"
@@ -425,8 +429,9 @@ class TripViewSet(AuditedModelViewSet):
         return Response(self.get_serializer(trip).data)
 
     @action(detail=True, methods=["post"])
+    @transaction.atomic
     def cancel(self, request, pk=None):
-        trip = self.get_object()
+        trip = Trip.objects.select_for_update().get(pk=self.get_object().pk)
         if trip.status == Trip.Status.SETTLED:
             return Response({"detail": "Settled trips cannot be cancelled"}, status=400)
         paid = trip.payment_allocations.filter(payment__status="PAID").aggregate(total=Sum("net_cash_allocated"))["total"] or 0

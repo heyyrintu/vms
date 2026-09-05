@@ -1,5 +1,6 @@
 import re
 
+from django.db import transaction
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
@@ -287,6 +288,8 @@ class TripRecoverySerializer(serializers.ModelSerializer):
 
 
 class TripSerializer(serializers.ModelSerializer):
+    unloading_advance = serializers.DecimalField(max_digits=14, decimal_places=2, min_value=0, required=False, write_only=True)
+    advance_percent = serializers.DecimalField(max_digits=5, decimal_places=2, min_value=0, max_value=100, required=False)
     active_approval = serializers.SerializerMethodField()
     client_name = serializers.CharField(source="client.name", read_only=True)
     indent_no = serializers.CharField(source="indent.indent_no", read_only=True)
@@ -353,13 +356,23 @@ class TripSerializer(serializers.ModelSerializer):
             Trip.objects.filter(pk=trip.pk).update(indent=primary)
             trip.indent = primary
 
+    @transaction.atomic
     def create(self, validated_data):
+        unloading = validated_data.pop("unloading_advance", 0)
         indents = validated_data.pop("indent_ids", [])
         if indents and "indent" not in validated_data:
             validated_data["indent"] = indents[0]
         trip = super().create(validated_data)
         if indents:
             self._sync_indents(trip, indents)
+        if unloading:
+            TripCharge.objects.create(
+                trip=trip, charge_type=TripCharge.ChargeType.UNLOADING,
+                description="Unloading advance", amount=unloading,
+                direction=TripCharge.Direction.ADD, advance_eligible=True,
+                tds_eligible=False, source=TripCharge.Source.INITIAL,
+                created_by=self.context["request"].user,
+            )
         return trip
 
     def update(self, instance, validated_data):
@@ -390,6 +403,21 @@ class TripSerializer(serializers.ModelSerializer):
         return data
 
     def validate(self, attrs):
+        if self.instance and "unloading_advance" in attrs:
+            raise serializers.ValidationError({"unloading_advance": "Use the trip charges action to add charges to an existing trip."})
+        new_status = attrs.get("status")
+        old_status = self.instance.status if self.instance else None
+        allowed_transitions = {
+            None: {Trip.Status.DRAFT, Trip.Status.READY},
+            Trip.Status.DRAFT: {Trip.Status.READY},
+            Trip.Status.READY: {Trip.Status.DRAFT},
+            Trip.Status.ADVANCE_APPROVED: {Trip.Status.DEPLOYED},
+            Trip.Status.ADVANCE_PARTIALLY_PAID: {Trip.Status.DEPLOYED},
+            Trip.Status.ADVANCE_PAID: {Trip.Status.DEPLOYED},
+            Trip.Status.DEPLOYED: {Trip.Status.IN_TRANSIT},
+        }
+        if new_status is not None and new_status != old_status and new_status not in allowed_transitions.get(old_status, set()):
+            raise serializers.ValidationError({"status": "Use the approval, payment, delivery, cancellation or settlement workflow to change this status."})
         vendor = attrs.get("vendor", getattr(self.instance, "vendor", None))
         vehicle = attrs.get("vehicle", getattr(self.instance, "vehicle", None))
         driver = attrs.get("driver", getattr(self.instance, "driver", None))

@@ -28,6 +28,18 @@ def paid_totals(item):
     return {key: value or Decimal("0") for key, value in totals.items()}
 
 
+def _update_advance_status(trip, item, paid):
+    # Payment state must not rewind dispatch, delivery, cancellation or settlement.
+    if trip.status not in {Trip.Status.ADVANCE_APPROVED, Trip.Status.ADVANCE_PARTIALLY_PAID, Trip.Status.ADVANCE_PAID}:
+        return
+    if paid["gross"] == 0:
+        trip.status = Trip.Status.ADVANCE_APPROVED
+    elif paid["gross"] < item.gross_requested:
+        trip.status = Trip.Status.ADVANCE_PARTIALLY_PAID
+    else:
+        trip.status = Trip.Status.ADVANCE_PAID
+
+
 @transaction.atomic
 def create_paid_payment(
     *,
@@ -56,6 +68,8 @@ def create_paid_payment(
         raise ValueError("The selected bank account does not belong to the payment vendor")
     normalized = []
     item_ids = [entry["approval_item_id"] for entry in allocations]
+    if len(item_ids) != len(set(item_ids)):
+        raise ValueError("Each approval item may be allocated only once per payment")
     items = {item.pk: item for item in PaymentApprovalItem.objects.select_for_update().select_related("trip", "vendor").filter(pk__in=item_ids)}
     if len(items) != len(set(item_ids)):
         raise ValueError("One or more approval items do not exist")
@@ -65,6 +79,8 @@ def create_paid_payment(
             raise ValueError(f"Approval item {item.pk} is not approved")
         if item.vendor_id != vendor.pk:
             raise ValueError("All allocations must belong to the payment vendor")
+        if item.trip.status in {Trip.Status.CANCELLED, Trip.Status.CANCELLED_WITH_PAYMENT, Trip.Status.SETTLED}:
+            raise ValueError("Payments cannot be posted against cancelled or settled trips")
         gross = Decimal(str(entry["gross_amount_allocated"])).quantize(Decimal("0.01"))
         tds = Decimal(str(entry["tds_allocated"])).quantize(Decimal("0.01"))
         net = Decimal(str(entry["net_cash_allocated"])).quantize(Decimal("0.01"))
@@ -131,13 +147,12 @@ def create_paid_payment(
     payment.paid_at = timezone.now()
     payment.save(update_fields=["status", "paid_at", "updated_at"])
     for item, _gross, _tds, _net in normalized:
-        remaining = item.net_requested - paid_totals(item)["net"]
+        item_paid = paid_totals(item)
+        remaining = item.gross_requested - item_paid["gross"]
         if item.batch.purpose == "FINAL_SETTLEMENT":
             item.trip.status = Trip.Status.SETTLEMENT_PENDING
         else:
-            item.trip.status = (
-                Trip.Status.ADVANCE_PAID if remaining == 0 else Trip.Status.ADVANCE_PARTIALLY_PAID
-            )
+            _update_advance_status(item.trip, item, item_paid)
         item.trip.save(update_fields=["status", "updated_at"])
         if item.batch.purpose == "FINAL_SETTLEMENT" and remaining == 0:
             settlement = getattr(item.trip, "final_settlement", None)
@@ -251,14 +266,18 @@ def reverse_payment(*, actor, payment, reason, request_id=""):
     payment = FinancePaymentTransaction.objects.select_for_update().get(pk=payment.pk)
     if payment.status != payment.Status.PAID:
         raise ValueError("Only paid transactions can be reversed")
+    allocations = list(payment.allocations.select_related("approval_item", "trip").order_by("trip_id", "id"))
+    locked_trips = {trip.pk: trip for trip in Trip.objects.select_for_update().filter(
+        pk__in=[allocation.trip_id for allocation in allocations]
+    ).order_by("pk")}
     payment.status = payment.Status.REVERSED
     payment.reversal_reason = reason
     payment.save(update_fields=["status", "reversal_reason", "updated_at"])
     payment.tds_entries.update(status="REVERSED")
-    for allocation in payment.allocations.select_related("approval_item", "trip"):
+    for allocation in allocations:
+        allocation.trip = locked_trips[allocation.trip_id]
         item = allocation.approval_item
         paid = paid_totals(item)
-        remaining = item.net_requested - paid["net"]
         if item.batch.purpose == "FINAL_SETTLEMENT":
             allocation.trip.status = Trip.Status.SETTLEMENT_PENDING
             settlement = getattr(allocation.trip, "final_settlement", None)
@@ -279,12 +298,8 @@ def reverse_payment(*, actor, payment, reason, request_id=""):
                         "updated_at",
                     ]
                 )
-        elif paid["net"] == 0:
-            allocation.trip.status = Trip.Status.ADVANCE_APPROVED
-        elif remaining > 0:
-            allocation.trip.status = Trip.Status.ADVANCE_PARTIALLY_PAID
         else:
-            allocation.trip.status = Trip.Status.ADVANCE_PAID
+            _update_advance_status(allocation.trip, item, paid)
         allocation.trip.save(update_fields=["status", "updated_at"])
     record_audit(actor=actor, action="PAYMENT_REVERSED", instance=payment, before={"status": "PAID"}, after={"status": "REVERSED", "reason": reason}, request_id=request_id)
     return payment

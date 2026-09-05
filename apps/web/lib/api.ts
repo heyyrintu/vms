@@ -52,6 +52,19 @@ export function listResults<T>(value: T[] | { results: T[] }): T[] {
   return Array.isArray(value) ? value : value.results;
 }
 
+// Selectors need every page, unlike registers which display one page at a time.
+export async function apiAll<T>(path: string): Promise<T[]> {
+  const url = new URL(path, "http://local.invalid");
+  url.searchParams.set("page_size", "200");
+  const rows: T[] = [];
+  for (let page = 1; ; page++) {
+    url.searchParams.set("page", String(page));
+    const data = await api<T[] | { results: T[]; next: string | null }>(`${url.pathname}${url.search}`);
+    rows.push(...listResults(data));
+    if (Array.isArray(data) || !data.next) return rows;
+  }
+}
+
 export const money = (value: number | string | null | undefined) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(Number(value ?? 0));
 

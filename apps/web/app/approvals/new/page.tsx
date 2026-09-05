@@ -4,15 +4,15 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { api, listResults } from "@/lib/api";
-import type { Approval, Paginated, Trip } from "@/lib/types";
+import { api, apiAll } from "@/lib/api";
+import type { Approval, Trip } from "@/lib/types";
 import { DateText, Empty, ErrorNotice, Loading, Money, PageHeader } from "@/components/UI";
 
 export default function ApprovalBuilderPage() {
   const router = useRouter(); const [selected, setSelected] = useState<number[]>([]); const [error, setError] = useState<unknown>(); const [busy, setBusy] = useState(false);
   const [edits, setEdits] = useState<Record<number, { vendor_freight_rate: string; advance_percent: string }>>({});
-  const trips = useQuery({ queryKey: ["eligible-trips"], queryFn: () => api<Paginated<Trip>>("/trips/?status=READY&page_size=200") });
-  const allRows = useMemo(() => trips.data ? listResults(trips.data) : [], [trips.data]);
+  const trips = useQuery({ queryKey: ["eligible-trips"], queryFn: () => apiAll<Trip>("/trips/?status=READY") });
+  const allRows = useMemo(() => trips.data ?? [], [trips.data]);
   const rows = useMemo(() => allRows.filter((row) => !row.active_approval), [allRows]);
   const locked = allRows.filter((row) => row.active_approval);
   const chosen = useMemo(() => rows.filter((row) => selected.includes(row.id)), [rows, selected]);

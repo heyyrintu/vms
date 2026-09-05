@@ -162,6 +162,8 @@ class MFASetupView(APIView):
 
     @extend_schema(request=None, responses=dict)
     def post(self, request):
+        if request.user.mfa_enabled:
+            return Response({"detail": "MFA is already enabled. Disable it using your password and authenticator code before setting it up again."}, status=400)
         secret = generate_secret()
         request.user.mfa_secret_encrypted = encrypt_value(secret)
         request.user.mfa_enabled = False

@@ -4,21 +4,21 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { api, listResults, money } from "@/lib/api";
-import type { Client, Driver, Indent, Paginated, Trip, Vehicle, Vendor } from "@/lib/types";
+import { api, apiAll, money } from "@/lib/api";
+import type { Client, Driver, Indent, Trip, Vehicle, Vendor } from "@/lib/types";
 import { DateText, Empty, ErrorNotice, Loading, PageHeader, StatusBadge } from "@/components/UI";
 
 const today = new Date().toISOString().slice(0, 10);
 
 export default function NewTripPage() {
   const router = useRouter();
-  const masters = useQuery({ queryKey: ["trip-masters-with-indents"], queryFn: async () => ({
-    clients: listResults(await api<Paginated<Client>>("/clients/")),
-    vendors: listResults(await api<Paginated<Vendor>>("/vendors/")),
-    vehicles: listResults(await api<Paginated<Vehicle>>("/vehicles/")),
-    drivers: listResults(await api<Paginated<Driver>>("/drivers/")),
-    indents: listResults(await api<Paginated<Indent>>("/indents/?status=OPEN")),
-  }) });
+  const masters = useQuery({ queryKey: ["trip-masters-with-indents"], queryFn: async () => {
+    const [clients, vendors, vehicles, drivers, indents] = await Promise.all([
+      apiAll<Client>("/clients/"), apiAll<Vendor>("/vendors/"), apiAll<Vehicle>("/vehicles/"),
+      apiAll<Driver>("/drivers/"), apiAll<Indent>("/indents/?status=OPEN"),
+    ]);
+    return { clients, vendors, vehicles, drivers, indents };
+  } });
   const [form, setForm] = useState({ client: "", origin: "Sonipat", destination: "", deployment_date: today, expected_delivery_date: "", vendor: "", vehicle: "", driver: "", vendor_freight_rate: "", unloading: "0", advance_percent: "90", uom_ltrs: "LTR", quantity: "", total_load: "", branch: "Sonipat", vehicle_type: "" });
   const [selectedIndentIds, setSelectedIndentIds] = useState<number[]>([]);
   const [indentSearch, setIndentSearch] = useState("");
@@ -61,8 +61,7 @@ export default function NewTripPage() {
     event.preventDefault(); setBusy(true); setError(undefined);
     try {
       if (!selectedIndentIds.length) throw new Error("Select at least one indent for this trip");
-      const trip = await api<Trip>("/trips/", { method: "POST", body: JSON.stringify({ indent: selectedIndentIds[0], indent_ids: selectedIndentIds, client: Number(clientId), origin: form.origin, destination: form.destination, deployment_date: form.deployment_date, expected_delivery_date: form.expected_delivery_date || null, vendor: Number(form.vendor), vehicle: Number(form.vehicle), driver: Number(form.driver), vendor_freight_rate: form.vendor_freight_rate, advance_percent: form.advance_percent, uom_ltrs: form.uom_ltrs, quantity: form.quantity || null, total_load: form.total_load || null, branch: form.branch }) });
-      if (Number(form.unloading) > 0) await api(`/trips/${trip.id}/charges/`, { method: "POST", body: JSON.stringify({ charge_type: "UNLOADING", description: "Unloading advance", amount: form.unloading, direction: "ADD", advance_eligible: true, tds_eligible: false, source: "INITIAL" }) });
+      const trip = await api<Trip>("/trips/", { method: "POST", body: JSON.stringify({ indent: selectedIndentIds[0], indent_ids: selectedIndentIds, client: Number(clientId), origin: form.origin, destination: form.destination, deployment_date: form.deployment_date, expected_delivery_date: form.expected_delivery_date || null, vendor: Number(form.vendor), vehicle: Number(form.vehicle), driver: Number(form.driver), vendor_freight_rate: form.vendor_freight_rate, advance_percent: form.advance_percent, unloading_advance: form.unloading || "0", uom_ltrs: form.uom_ltrs, quantity: form.quantity || null, total_load: form.total_load || null, branch: form.branch }) });
       router.push(`/trips/${trip.id}`);
     } catch (reason) { setError(reason); } finally { setBusy(false); }
   };

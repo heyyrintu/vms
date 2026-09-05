@@ -121,7 +121,12 @@ def refresh_batch_status_from_items(batch):
 
 @transaction.atomic
 def create_approval_batch(*, actor, trips, purpose="ADVANCE", request_id=""):
-    trips = list(Trip.objects.select_for_update().select_related("client", "vendor").filter(pk__in=[t.pk if hasattr(t, "pk") else t for t in trips]))
+    trip_ids = [t.pk if hasattr(t, "pk") else t for t in trips]
+    if len(trip_ids) != len(set(trip_ids)):
+        raise ValueError("Each trip may be selected only once")
+    trips = list(Trip.objects.select_for_update().select_related("client", "vendor").filter(pk__in=trip_ids))
+    if len(trips) != len(trip_ids):
+        raise ValueError("One or more selected trips no longer exist. Refresh the trip list.")
     if not trips:
         raise ValueError("At least one trip is required")
     if len({trip.client_id for trip in trips}) != 1:
@@ -211,8 +216,13 @@ def submit_batch(*, batch, actor, request_id=""):
     batch = PaymentApprovalBatch.objects.select_for_update().get(pk=batch.pk)
     if batch.requested_by_id != actor.id and not has_capability(actor, "*"):
         raise PermissionError("Only the requester or an administrator can submit this batch")
-    if batch.status not in {batch.Status.DRAFT, batch.Status.CHANGES_REQUESTED}:
-        raise ValueError("Only draft or returned batches can be submitted")
+    if batch.status == batch.Status.CHANGES_REQUESTED:
+        raise ValueError("Returned approvals require a new revision. Review the trip values and create a new approval from the builder.")
+    if batch.status != batch.Status.DRAFT:
+        raise ValueError("Only draft batches can be submitted")
+    trips = list(Trip.objects.select_for_update().filter(pk__in=batch.items.values("trip_id")).order_by("pk"))
+    if any(trip.status in {Trip.Status.CANCELLED, Trip.Status.CANCELLED_WITH_PAYMENT, Trip.Status.SETTLED} for trip in trips):
+        raise ValueError("Cancelled or settled trips cannot be submitted for approval")
     batch.status = batch.Status.PENDING
     batch.submitted_at = timezone.now()
     batch.approval_rule_snapshot = _rule_snapshot(batch)
@@ -266,6 +276,12 @@ def decide_batch(*, batch, actor, decision, item_ids=None, comment="", request_i
         raise ValueError("A reason is required for reject or send back")
     if stage and actor.role != stage.role and not has_capability(actor, "*"):
         raise PermissionError(f"The current stage requires the {stage.role} role")
+    pending_items = batch.items.filter(item_status=PaymentApprovalItem.Status.PENDING)
+    if item_ids:
+        pending_items = pending_items.filter(pk__in=item_ids)
+    locked_trips = list(Trip.objects.select_for_update().filter(pk__in=pending_items.values("trip_id")).order_by("pk"))
+    if any(trip.status in {Trip.Status.CANCELLED, Trip.Status.CANCELLED_WITH_PAYMENT, Trip.Status.SETTLED} for trip in locked_trips):
+        raise ValueError("Cancelled or settled trips cannot receive approval decisions. Select only open trip lines.")
     pending_stages = list(batch.stage_decisions.filter(status=ApprovalStageDecision.Status.PENDING))
     final_stage = not stage or (pending_stages and stage.pk == pending_stages[-1].pk)
     if decision == ApprovalAction.Action.APPROVE and not final_stage:
