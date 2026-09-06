@@ -69,6 +69,7 @@ export async function createReadyTrip(page: Page): Promise<{ id: number; trip_no
     throw new Error("Seed data lacks a client, vendor with vehicle, or indent");
   const drivers = rows(await apiCall<Paged<{ id: number }>>(page, `/api/drivers/?vendor=${vendor.id}&page_size=1`));
   const driver = drivers[0] ?? rows(await apiCall<Paged<{ id: number }>>(page, "/api/drivers/?page_size=1"))[0];
+  if (!driver) throw new Error("Seed data lacks a driver; run manage.py seed_demo before the e2e suite");
   const detail = await apiCall<{ bank_accounts?: unknown[] }>(page, `/api/vendors/${vendor.id}/`);
   if (!detail.bank_accounts?.length) {
     await apiCall(page, "/api/vendor-bank-accounts/", "POST", {
