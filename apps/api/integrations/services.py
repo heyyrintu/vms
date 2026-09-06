@@ -799,6 +799,12 @@ def ingest_email_reply(*, external_message_id, external_thread_id, subject, body
         match = re.search(r"\[(PA-\d{4}-\d{6})\]", subject or "")
         if match:
             batch = PaymentApprovalBatch.objects.filter(approval_no=match.group(1)).first()
+    approval_types = {"approval", "approvals.paymentapprovalbatch"}
+    if batch and outbound and (
+        outbound.object_type not in approval_types or str(outbound.object_id) != str(batch.pk)
+    ):
+        # A thread match for another object must not vouch for a batch found via the subject.
+        outbound = None
     author = _email_reply_author(batch, sender, outbound) if batch else None
     if batch and author:
         message.object_type = "approval"
