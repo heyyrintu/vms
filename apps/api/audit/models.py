@@ -36,7 +36,12 @@ class AuditLog(models.Model):
         self.before = json.loads(json.dumps(self.before, default=str))
         self.after = json.loads(json.dumps(self.after, default=str))
         with transaction.atomic():
-            previous = AuditLog.objects.select_for_update().order_by("-id").first()
+            from core.models import NumberSequence
+
+            # Lock one sentinel row so concurrent writers queue, then read the parent
+            # in a fresh statement so the chain never forks under READ COMMITTED.
+            NumberSequence.objects.select_for_update().get_or_create(key="audit:chain", defaults={"value": 0})
+            previous = AuditLog.objects.order_by("-id").first()
             self.previous_hash = previous.entry_hash if previous else ""
             payload = json.dumps(
                 {

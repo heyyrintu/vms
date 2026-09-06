@@ -30,7 +30,10 @@ def test_excel_import_preview_handles_dates_formulas_and_duplicates():
 
 @pytest.mark.django_db
 def test_email_reply_mapping_is_idempotent(trip_factory, users):
-    batch = create_approval_batch(actor=users[User.Role.OPERATIONS], trips=[trip_factory(1)])
+    trip = trip_factory(1)
+    trip.vendor.email = "manager@example.test"
+    trip.vendor.save(update_fields=["email", "updated_at"])
+    batch = create_approval_batch(actor=users[User.Role.OPERATIONS], trips=[trip])
     message = ingest_email_reply(
         external_message_id="email-1",
         external_thread_id="thread-1",

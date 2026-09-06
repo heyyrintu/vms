@@ -64,13 +64,19 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ["id", "object_type", "object_id", "author", "author_name", "body", "visibility", "parent", "mentions", "attachments", "edit_history", "edited_at", "created_at", "updated_at"]
         read_only_fields = ["author", "edit_history", "edited_at", "created_at", "updated_at"]
 
+    def validate(self, attrs):
+        if self.instance:
+            for field in ("object_type", "object_id", "parent", "visibility"):
+                if field in attrs and attrs[field] != getattr(self.instance, field):
+                    raise serializers.ValidationError({field: "This field cannot be changed after the comment is posted"})
+        return attrs
+
     @extend_schema_field(serializers.CharField())
     def get_author_name(self, obj):
         return obj.author.get_full_name() or obj.author.username
 
     @extend_schema_field(serializers.ListField(child=serializers.DictField()))
     def get_attachments(self, obj):
-        request = self.context.get("request")
         return [
             {
                 "id": document.pk,
@@ -78,7 +84,7 @@ class CommentSerializer(serializers.ModelSerializer):
                 "original_name": document.original_name,
                 "scan_status": document.scan_status,
                 "created_at": document.created_at,
-                "download_url": request.build_absolute_uri(f"/api/documents/{document.pk}/download/") if request else f"/api/documents/{document.pk}/download/",
+                "download_url": f"/api/documents/{document.pk}/download/",
             }
             for document in obj.attachments.all()
         ]
@@ -102,13 +108,25 @@ class ApprovalBatchSerializer(serializers.ModelSerializer):
         return obj.requested_by.get_full_name() or obj.requested_by.username
 
     def _visible_items(self, obj):
-        queryset = obj.items.exclude(item_status=PaymentApprovalItem.Status.SUPERSEDED).select_related(
-            "trip", "vendor"
-        )
+        # Items, vendor subtotals and transporter totals all read the same rows; fetch once.
+        cache = self.context.setdefault("_visible_items", {})
+        if obj.pk in cache:
+            return cache[obj.pk]
         request = self.context.get("request")
-        if request and request.user.role == "TRANSPORTER":
-            queryset = queryset.filter(vendor_id=request.user.vendor_id)
-        return queryset
+        vendor_id = request.user.vendor_id if request and request.user.role == "TRANSPORTER" else None
+        items = (
+            obj.items.all()
+            if "items" in getattr(obj, "_prefetched_objects_cache", {})
+            else obj.items.select_related("trip", "vendor").all()
+        )
+        rows = [
+            item
+            for item in items
+            if item.item_status != PaymentApprovalItem.Status.SUPERSEDED
+            and (vendor_id is None or item.vendor_id == vendor_id)
+        ]
+        cache[obj.pk] = rows
+        return rows
 
     @extend_schema_field(ApprovalItemSerializer(many=True))
     def get_items(self, obj):

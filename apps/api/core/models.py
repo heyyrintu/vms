@@ -66,3 +66,12 @@ class NumberSequence(models.Model):
             except IntegrityError:
                 continue
         raise RuntimeError(f"Could not allocate number sequence for {key}")
+
+    @classmethod
+    def reserve(cls, key, value):
+        """Advance a sequence past an externally supplied number so later numbers never collide."""
+        with transaction.atomic():
+            sequence, _ = cls.objects.select_for_update().get_or_create(key=key, defaults={"value": 0})
+            if sequence.value < value:
+                sequence.value = value
+                sequence.save(update_fields=["value"])

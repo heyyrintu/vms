@@ -162,6 +162,15 @@ def queue_message(
             ),
             robust=True,
         )
+    elif created and channel in {IntegrationMessage.Channel.EMAIL, IntegrationMessage.Channel.WHATSAPP}:
+        from .tasks import deliver_message_task
+
+        # Dispatch immediately instead of waiting for the periodic outbox sweep.
+        actor_id = getattr(actor, "pk", None) if getattr(actor, "is_authenticated", False) else None
+        transaction.on_commit(
+            lambda message_id=message.pk, actor_id=actor_id: deliver_message_task.delay(message_id, actor_id),
+            robust=True,
+        )
     return message
 
 
@@ -452,6 +461,10 @@ def process_whatsapp_approval_response(*, inbound_message, outbound_message, sen
     stage = batch.stage_decisions.filter(sequence=batch.current_stage).first()
     if stage and user.role != stage.role and user.role != User.Role.ADMIN:
         raise PermissionError("The sender is not assigned to the current approval stage")
+    if not settings.WHATSAPP_INTERACTIVE_DECISIONS:
+        raise PermissionError(
+            "WhatsApp button decisions are disabled. Open the approval in the application to decide."
+        )
     decision = (
         ApprovalAction.Action.APPROVE
         if data["decision"] == "APPROVE"
@@ -558,6 +571,16 @@ def emit_event(event_key, *, instance, actor=None):
                 provider_options = approval_whatsapp_options(instance, user, approval_packet)
             elif channel == IntegrationMessage.Channel.WHATSAPP:
                 provider_options = workflow_whatsapp_options(event_key, instance, actor=actor)
+            event_marker = getattr(instance, "revision_no", 0)
+            if event_key == "FINANCE_READY" and hasattr(instance, "items"):
+                event_marker = f"{event_marker}:{instance.items.filter(item_status='APPROVED').count()}"
+            legacy_key = (
+                f"event:{event_key}:{instance._meta.label_lower}:{instance.pk}:"
+                f"{getattr(instance, 'current_stage', 0)}:{user.pk}:{channel}"
+            )
+            if IntegrationMessage.objects.filter(idempotency_key=legacy_key).exists():
+                # Rows queued before the marker was added keep their original key.
+                continue
             queue_message(
                 channel=channel,
                 recipient=recipient,
@@ -567,7 +590,7 @@ def emit_event(event_key, *, instance, actor=None):
                 object_id=instance.pk,
                 idempotency_key=(
                     f"event:{event_key}:{instance._meta.label_lower}:{instance.pk}:"
-                    f"{getattr(instance, 'current_stage', 0)}:{user.pk}:{channel}"
+                    f"{getattr(instance, 'current_stage', 0)}:{event_marker}:{user.pk}:{channel}"
                 ),
                 user=user,
                 event_key=event_key,
@@ -701,7 +724,39 @@ def persist_whatsapp_media(message, media):
     return document
 
 
-@transaction.atomic
+def _email_reply_author(batch, sender, outbound=None):
+    """Resolve the inbound sender to a user allowed to comment on this approval, or None.
+
+    The sender address is client-supplied, so it is only trusted when it matches the
+    approver the outbound mail was sent to, a transporter login of one of the batch
+    vendors, or the registered email of one of those vendors.
+    """
+    from accounts.models import User
+    from operations.models import Vendor
+
+    match = re.search(r"[\w.+-]+@[\w.-]+", sender or "")
+    email = match.group(0).lower() if match else ""
+    if not email:
+        return None
+    if outbound and outbound.user_id and outbound.user.is_active and outbound.user.email.lower() == email:
+        return outbound.user
+    vendor_ids = list(batch.items.values_list("vendor_id", flat=True))
+    transporter = (
+        User.objects.filter(role=User.Role.TRANSPORTER, vendor_id__in=vendor_ids, is_active=True, email__iexact=email)
+        .order_by("pk")
+        .first()
+    )
+    if transporter:
+        return transporter
+    vendor = Vendor.objects.filter(pk__in=vendor_ids, email__iexact=email).order_by("pk").first()
+    if vendor:
+        # Verified vendor address without a transporter login: file it under the requester,
+        # the comment body still names the actual sender.
+        transporter = User.objects.filter(role=User.Role.TRANSPORTER, vendor=vendor, is_active=True).order_by("pk").first()
+        return transporter or batch.requested_by
+    return None
+
+
 def ingest_email_reply(*, external_message_id, external_thread_id, subject, body, sender=""):
     from approvals.models import Comment, PaymentApprovalBatch
 
@@ -723,11 +778,20 @@ def ingest_email_reply(*, external_message_id, external_thread_id, subject, body
     )
     if not created:
         return message
-    outbound = (
-        IntegrationMessage.objects.filter(external_thread_id=external_thread_id, direction="OUTBOUND")
-        .exclude(object_type="unmapped")
-        .first()
-    )
+    outbound = None
+    if external_thread_id:
+        # An empty thread id must never match: SMTP outbound records carry no thread.
+        outbound = (
+            IntegrationMessage.objects.filter(
+                channel=IntegrationMessage.Channel.EMAIL,
+                external_thread_id=external_thread_id,
+                direction="OUTBOUND",
+            )
+            .exclude(object_type="unmapped")
+            .select_related("user")
+            .order_by("-id")
+            .first()
+        )
     batch = None
     if outbound and outbound.object_type in {"approval", "approvals.paymentapprovalbatch"}:
         batch = PaymentApprovalBatch.objects.filter(pk=outbound.object_id).first()
@@ -735,19 +799,30 @@ def ingest_email_reply(*, external_message_id, external_thread_id, subject, body
         match = re.search(r"\[(PA-\d{4}-\d{6})\]", subject or "")
         if match:
             batch = PaymentApprovalBatch.objects.filter(approval_no=match.group(1)).first()
-    if batch:
+    approval_types = {"approval", "approvals.paymentapprovalbatch"}
+    if batch and outbound and (
+        outbound.object_type not in approval_types or str(outbound.object_id) != str(batch.pk)
+    ):
+        # A thread match for another object must not vouch for a batch found via the subject.
+        outbound = None
+    author = _email_reply_author(batch, sender, outbound) if batch else None
+    if batch and author:
         message.object_type = "approval"
         message.object_id = str(batch.pk)
-        message.save(update_fields=["object_type", "object_id", "updated_at"])
+        message.user = author
+        message.save(update_fields=["object_type", "object_id", "user", "updated_at"])
         Comment.objects.create(
             object_type="approval",
             object_id=str(batch.pk),
-            author=batch.requested_by,
+            author=author,
             body=f"Email reply from {sender}:\n\n{body}",
             visibility=Comment.Visibility.INTERNAL,
         )
     else:
-        UnmappedInboundMessage.objects.get_or_create(
-            message=message, defaults={"reason": "No matching thread or approval reference"}
+        reason = (
+            "Sender is not a registered contact for this approval's vendors or approver"
+            if batch
+            else "No matching thread or approval reference"
         )
+        UnmappedInboundMessage.objects.get_or_create(message=message, defaults={"reason": reason})
     return message

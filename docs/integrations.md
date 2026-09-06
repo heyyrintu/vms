@@ -53,7 +53,7 @@ Net payable: INR {{6}}
 Review the attached trip PDF, then choose Approve or Reject.
 ```
 
-The application uploads the generated approval PDF to WhatsApp, fills all six parameters and signs each button payload for the individual approver. Replies are accepted only when the sender number matches that active user, the response is linked to the original outbound request, the approval is still pending at that user's stage and the token has not expired. The default expiry is seven days (`WHATSAPP_APPROVAL_EXPIRY_SECONDS=604800`). Duplicate webhook deliveries do not repeat the decision.
+The application uploads the generated approval PDF to WhatsApp, fills all six parameters and signs each button payload for the individual approver. Replies are accepted only when the sender number matches that active user, the response is linked to the original outbound request, the approval is still pending at that user's stage and the token has not expired. The default expiry is seven days (`WHATSAPP_APPROVAL_EXPIRY_SECONDS=604800`). Duplicate webhook deliveries do not repeat the decision. Set `WHATSAPP_INTERACTIVE_DECISIONS=false` to make the buttons record-only, so every approve/reject must happen inside the authenticated application.
 
 Approval-button payloads use compact timestamped signatures and remain within Meta's 128-character quick-reply payload limit. Retrying an approval request regenerates the signed buttons so older queued payload formats cannot block delivery.
 

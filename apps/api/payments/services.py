@@ -22,6 +22,14 @@ from .models import (
 
 
 def paid_totals(item):
+    cache = getattr(item, "_prefetched_objects_cache", {})
+    if "allocations" in cache:
+        rows = [row for row in cache["allocations"] if row.payment.status == FinancePaymentTransaction.Status.PAID]
+        return {
+            "gross": sum((row.gross_amount_allocated for row in rows), Decimal("0")),
+            "tds": sum((row.tds_allocated for row in rows), Decimal("0")),
+            "net": sum((row.net_cash_allocated for row in rows), Decimal("0")),
+        }
     totals = item.allocations.filter(payment__status=FinancePaymentTransaction.Status.PAID).aggregate(
         gross=Sum("gross_amount_allocated"), tds=Sum("tds_allocated"), net=Sum("net_cash_allocated")
     )
@@ -270,6 +278,8 @@ def reverse_payment(*, actor, payment, reason, request_id=""):
     locked_trips = {trip.pk: trip for trip in Trip.objects.select_for_update().filter(
         pk__in=[allocation.trip_id for allocation in allocations]
     ).order_by("pk")}
+    if any(trip.status == Trip.Status.SETTLED for trip in locked_trips.values()):
+        raise ValueError("Payments on settled trips cannot be reversed. Reopen the settlement first.")
     payment.status = payment.Status.REVERSED
     payment.reversal_reason = reason
     payment.save(update_fields=["status", "reversal_reason", "updated_at"])

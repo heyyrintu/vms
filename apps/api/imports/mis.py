@@ -1,4 +1,5 @@
 import hashlib
+import re
 from collections import defaultdict
 from datetime import date
 from decimal import Decimal
@@ -13,7 +14,7 @@ from openpyxl.styles import Alignment, Font, PatternFill
 
 from approvals.models import ApprovalAction, PaymentApprovalBatch, PaymentApprovalItem
 from audit.models import record_audit
-from core.models import OrganizationSettings, TDSPolicy
+from core.models import NumberSequence, OrganizationSettings, TDSPolicy
 from operations.models import Client, Driver, Indent, Trip, TripCharge, Vehicle, Vendor
 from payments.models import FinancePaymentTransaction, PaymentAllocation
 from payments.services import create_paid_payment
@@ -436,6 +437,7 @@ def _resolve_trip(values, actor, job, create_missing):
         notes="\n".join(filter(None, [values["notes"], f"Historical MIS import #{job.pk}"])),
     )
     trip.save()
+    _reserve_trip_number(client, trip.trip_no)
     if Decimal(values["unloading"]):
         TripCharge.objects.create(
             trip=trip,
@@ -446,6 +448,12 @@ def _resolve_trip(values, actor, job, create_missing):
             created_by=actor,
         )
     return trip
+
+
+def _reserve_trip_number(client, trip_no):
+    match = re.fullmatch(rf"{re.escape(client.code)}-(\d{{4}})-(\d+)", trip_no or "")
+    if match:
+        NumberSequence.reserve(f"trip:{client.code}:{match.group(1)}", int(match.group(2)))
 
 
 def _existing_approval_item(trip, values):
@@ -635,6 +643,9 @@ def confirm_mis_import(*, job, actor, create_missing=True, allow_partial=False, 
     for row in valid_rows:
         values = row["normalized"]
         trip = row_trip_map[row["row_no"]]
+        if trip.pk not in created_trip_ids:
+            # Existing trips keep their live workflow state; only imported trips are stamped.
+            continue
         if values["trip_status"]:
             trip.status = values["trip_status"]
         elif not trip.payment_allocations.filter(payment__status=FinancePaymentTransaction.Status.PAID).exists():

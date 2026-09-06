@@ -2,18 +2,15 @@ from celery import shared_task
 from django.utils import timezone
 
 from .models import IntegrationMessage
-from .services import deliver_message, queue_message
+from .services import deliver_message
 
 
 @shared_task(autoretry_for=(Exception,), retry_backoff=True, max_retries=5)
-def send_message_task(message_data):
-    message = queue_message(**message_data)
-    return deliver_message(message).pk
+def deliver_message_task(message_id, actor_id=None):
+    from accounts.models import User
 
-
-@shared_task(autoretry_for=(Exception,), retry_backoff=True, max_retries=5)
-def deliver_message_task(message_id):
-    return deliver_message(message_id).pk
+    actor = User.objects.filter(pk=actor_id).first() if actor_id else None
+    return deliver_message(message_id, actor=actor).pk
 
 
 @shared_task

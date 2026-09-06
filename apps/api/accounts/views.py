@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import authenticate, login, logout, password_validation
 from django.contrib.auth.tokens import default_token_generator
 from django.middleware.csrf import get_token
@@ -120,7 +121,7 @@ class PasswordResetRequestView(APIView):
 
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
-            base_url = request.build_absolute_uri("/").rstrip("/")
+            base_url = settings.WEB_ORIGIN
             reset_url = f"{base_url}/login?reset_uid={uid}&reset_token={token}"
             queue_message(
                 channel="EMAIL",

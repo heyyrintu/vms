@@ -65,7 +65,10 @@ class GlobalSearchView(APIView):
         from payments.models import FinancePaymentTransaction
 
         results = []
-        for trip in Trip.objects.filter(
+        transporter = request.user.role == "TRANSPORTER"
+        trip_scope = {"vendor_id": request.user.vendor_id} if transporter else {}
+        vendor_scope = {"pk": request.user.vendor_id} if transporter else {}
+        for trip in Trip.objects.filter(**trip_scope).filter(
             Q(trip_no__icontains=term)
             | Q(indent__indent_no__icontains=term)
             | Q(indents__challan_no__icontains=term)
@@ -74,11 +77,9 @@ class GlobalSearchView(APIView):
             | Q(origin__icontains=term)
             | Q(destination__icontains=term)
         ).select_related("vendor").distinct()[:10]:
-            if request.user.role != "TRANSPORTER" or trip.vendor_id == request.user.vendor_id:
-                results.append({"type": "trip", "id": trip.pk, "label": trip.trip_no, "detail": f"{trip.origin} → {trip.destination}"})
-        for vendor in Vendor.objects.filter(Q(display_name__icontains=term) | Q(vendor_code__icontains=term))[:10]:
-            if request.user.role != "TRANSPORTER" or vendor.pk == request.user.vendor_id:
-                results.append({"type": "vendor", "id": vendor.pk, "label": vendor.display_name, "detail": vendor.vendor_code})
+            results.append({"type": "trip", "id": trip.pk, "label": trip.trip_no, "detail": f"{trip.origin} → {trip.destination}"})
+        for vendor in Vendor.objects.filter(**vendor_scope).filter(Q(display_name__icontains=term) | Q(vendor_code__icontains=term))[:10]:
+            results.append({"type": "vendor", "id": vendor.pk, "label": vendor.display_name, "detail": vendor.vendor_code})
         approvals = PaymentApprovalBatch.objects.filter(approval_no__icontains=term)
         if request.user.role == "TRANSPORTER":
             approvals = approvals.filter(items__vendor_id=request.user.vendor_id).distinct()
