@@ -53,3 +53,42 @@ def test_email_reply_mapping_is_idempotent(trip_factory, users):
     from approvals.models import Comment
 
     assert Comment.objects.filter(object_type="approval", object_id=str(batch.pk)).count() == 1
+
+
+def legacy_workbook(rows):
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.append(LEGACY_COLUMNS)
+    for row in rows:
+        sheet.append(row)
+    output = BytesIO()
+    workbook.save(output)
+    return output.getvalue()
+
+
+def sample_row(index, *, vehicle="HR10AB1234", vendor="Demo Vendor"):
+    return [index, "Sonipat", "Delhi", 45500, "LTRS", 10, 20000, 50000, 2500, 45000, 47500, vendor, vehicle, "Demo Driver", "0000000000", "32 FT", 45501]
+
+
+def test_legacy_preview_rejects_more_than_1000_rows():
+    with pytest.raises(ValueError, match="1,000"):
+        preview_legacy_workbook(legacy_workbook([sample_row(index) for index in range(1, 1002)]))
+
+
+@pytest.mark.django_db
+def test_legacy_confirm_reports_vehicle_owned_by_another_vendor(users):
+    from imports.models import ImportJob
+    from imports.services import confirm_import
+    from operations.models import Client, Vehicle, Vendor
+
+    client = Client.objects.create(code="NPL", name="NPL")
+    other = Vendor.objects.create(vendor_code="OTHER", legal_name="Other", display_name="Other Transport")
+    Vehicle.objects.create(registration_no="HR10AB1234", vendor=other, vehicle_type="32 FT")
+    preview = preview_legacy_workbook(legacy_workbook([sample_row(1, vendor="New Transport")]))
+    job = ImportJob.objects.create(
+        uploaded_by=users[User.Role.OPERATIONS], original_filename="legacy.xlsx", source_hash="vehicle-owner-test",
+        summary=preview, row_count=preview["row_count"], valid_count=preview["valid_count"], error_count=preview["error_count"],
+    )
+    job = confirm_import(job=job, actor=users[User.Role.OPERATIONS], client_id=client.pk, create_missing=True)
+    assert job.status == "VALIDATION_FAILED"
+    assert "another vendor" in job.result["errors"][0]["error"]

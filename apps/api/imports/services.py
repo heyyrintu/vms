@@ -87,7 +87,7 @@ def preview_legacy_workbook(content):
         if not any(value not in (None, "") for value in formula_values):
             continue
         if len(rows) >= 1000:
-            break
+            raise ValueError("Legacy imports are limited to 1,000 populated rows per workbook")
         def get_formula(name, values=formula_values):
             return values[positions[name]]
 
@@ -212,6 +212,14 @@ def confirm_import(
             preflight_errors.append(
                 {"row_no": row["row_no"], "error": f"Vehicle '{values['vehicle_registration']}' does not exist for this vendor"}
             )
+            continue
+        foreign_vehicle = Vehicle.objects.filter(registration_no=values["vehicle_registration"])
+        if vendor:
+            foreign_vehicle = foreign_vehicle.exclude(vendor=vendor)
+        if foreign_vehicle.exists():
+            preflight_errors.append(
+                {"row_no": row["row_no"], "error": f"Vehicle '{values['vehicle_registration']}' belongs to another vendor"}
+            )
     if preflight_errors:
         job.result = {"errors": preflight_errors, "created_trip_ids": [], "skipped": []}
         job.status = "VALIDATION_FAILED"
@@ -230,14 +238,13 @@ def confirm_import(
             deployment_date = parse_date(deployment_date)
         if isinstance(expected_delivery_date, str):
             expected_delivery_date = parse_date(expected_delivery_date)
-        vendor, _ = Vendor.objects.get_or_create(
-            display_name__iexact=values["vendor"],
-            defaults={
-                "vendor_code": _vendor_code(values["vendor"]),
-                "display_name": values["vendor"],
-                "legal_name": values["vendor"],
-            },
-        )
+        vendor = Vendor.objects.filter(display_name__iexact=values["vendor"]).order_by("pk").first()
+        if vendor is None:
+            vendor = Vendor.objects.create(
+                vendor_code=_vendor_code(values["vendor"]),
+                display_name=values["vendor"],
+                legal_name=values["vendor"],
+            )
         duplicate = Trip.objects.filter(
             deployment_date=deployment_date,
             origin__iexact=values["origin"],
