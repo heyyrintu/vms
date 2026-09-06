@@ -1,6 +1,5 @@
 import hashlib
-from datetime import date, datetime
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from io import BytesIO
 
 from django.db import transaction
@@ -8,12 +7,13 @@ from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.utils.text import slugify
 from openpyxl import Workbook, load_workbook
-from openpyxl.utils.datetime import from_excel
 
 from audit.models import record_audit
 from operations.models import Client, Driver, Indent, Trip, TripCharge, Vehicle, Vendor
 
 from .models import ImportJob
+from .parsing import parse_date as parse_cell_date
+from .parsing import parse_decimal
 
 LEGACY_COLUMNS = [
     "SR NO",
@@ -37,36 +37,11 @@ LEGACY_COLUMNS = [
 
 
 def _decimal(value, field, errors):
-    if value in (None, ""):
-        return Decimal("0.00")
-    try:
-        return Decimal(str(value)).quantize(Decimal("0.01"))
-    except (InvalidOperation, ValueError):
-        errors.append(f"{field} must be numeric")
-        return None
+    return parse_decimal(value, field, errors, required=False, default=Decimal("0.00"))
 
 
 def _date(value, field, errors, epoch):
-    if value in (None, ""):
-        return None
-    if isinstance(value, datetime):
-        return value.date()
-    if isinstance(value, date):
-        return value
-    if isinstance(value, int | float):
-        try:
-            converted = from_excel(value, epoch)
-            return converted.date() if isinstance(converted, datetime) else converted
-        except (ValueError, OverflowError):
-            pass
-    if isinstance(value, str):
-        for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"):
-            try:
-                return datetime.strptime(value.strip(), fmt).date()
-            except ValueError:
-                continue
-    errors.append(f"{field} is not a valid date")
-    return None
+    return parse_cell_date(value, field, errors, epoch)
 
 
 def preview_legacy_workbook(content):
@@ -87,7 +62,7 @@ def preview_legacy_workbook(content):
         if not any(value not in (None, "") for value in formula_values):
             continue
         if len(rows) >= 1000:
-            break
+            raise ValueError("Legacy imports are limited to 1,000 populated rows per workbook")
         def get_formula(name, values=formula_values):
             return values[positions[name]]
 
@@ -212,6 +187,14 @@ def confirm_import(
             preflight_errors.append(
                 {"row_no": row["row_no"], "error": f"Vehicle '{values['vehicle_registration']}' does not exist for this vendor"}
             )
+            continue
+        foreign_vehicle = Vehicle.objects.filter(registration_no=values["vehicle_registration"])
+        if vendor:
+            foreign_vehicle = foreign_vehicle.exclude(vendor=vendor)
+        if foreign_vehicle.exists():
+            preflight_errors.append(
+                {"row_no": row["row_no"], "error": f"Vehicle '{values['vehicle_registration']}' belongs to another vendor"}
+            )
     if preflight_errors:
         job.result = {"errors": preflight_errors, "created_trip_ids": [], "skipped": []}
         job.status = "VALIDATION_FAILED"
@@ -230,14 +213,13 @@ def confirm_import(
             deployment_date = parse_date(deployment_date)
         if isinstance(expected_delivery_date, str):
             expected_delivery_date = parse_date(expected_delivery_date)
-        vendor, _ = Vendor.objects.get_or_create(
-            display_name__iexact=values["vendor"],
-            defaults={
-                "vendor_code": _vendor_code(values["vendor"]),
-                "display_name": values["vendor"],
-                "legal_name": values["vendor"],
-            },
-        )
+        vendor = Vendor.objects.filter(display_name__iexact=values["vendor"]).order_by("pk").first()
+        if vendor is None:
+            vendor = Vendor.objects.create(
+                vendor_code=_vendor_code(values["vendor"]),
+                display_name=values["vendor"],
+                legal_name=values["vendor"],
+            )
         duplicate = Trip.objects.filter(
             deployment_date=deployment_date,
             origin__iexact=values["origin"],

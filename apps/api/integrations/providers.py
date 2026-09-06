@@ -234,13 +234,11 @@ class WhatsAppProvider(MessageProvider):
                 },
             }
         else:
-            content = {
-                "messaging_product": "whatsapp",
-                "recipient_type": "individual",
-                "to": recipient,
-                "type": "text",
-                "text": {"preview_url": False, "body": body[:4096]},
-            }
+            # Business-initiated free-form messages are rejected by Meta outside a
+            # 24-hour service window, so fail loudly instead of queueing silent failures.
+            raise RuntimeError(
+                "WhatsApp requires an approved template name; set WHATSAPP_TEMPLATE_NAME or pass template_name"
+            )
         result = request_json(
             f"https://graph.facebook.com/{self.api_version}/{self.phone_number_id}/messages",
             method="POST",

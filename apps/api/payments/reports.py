@@ -4,16 +4,19 @@ from datetime import date
 from decimal import Decimal
 from io import BytesIO, StringIO
 
-from django.db.models import Sum
+from django.db.models import DecimalField, F, OuterRef, Subquery, Sum, Value
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from openpyxl import Workbook
 
 from approvals.calculations import calculate_profitability
 from approvals.models import PaymentApprovalItem
-from operations.models import Trip, Vendor
+from operations.models import Trip
 
 from .models import ClientBilling, FinancePaymentTransaction, PaymentAllocation, TDSEntry
 from .services import paid_totals
+
+MONEY = DecimalField(max_digits=14, decimal_places=2)
 
 
 @dataclass
@@ -52,7 +55,28 @@ def _filtered_trips(params):
             queryset = queryset.filter(**{f"{field}_id": params[field]})
     if params.get("branch"):
         queryset = queryset.filter(branch__iexact=params["branch"])
-    return queryset
+    return annotate_financials(queryset)
+
+
+def _money_subquery(queryset, group_field, sum_field):
+    """Sum ``sum_field`` for the rows of ``queryset`` that belong to the outer row."""
+    totals = queryset.order_by().values(group_field).annotate(total=Sum(sum_field)).values("total")[:1]
+    return Coalesce(Subquery(totals, output_field=MONEY), Value(Decimal("0")), output_field=MONEY)
+
+
+def annotate_financials(trips):
+    """Attach approved, cash-paid and TDS totals so report rows need no per-trip queries."""
+    approved = PaymentApprovalItem.objects.filter(
+        trip=OuterRef("pk"), item_status=PaymentApprovalItem.Status.APPROVED
+    )
+    paid = PaymentAllocation.objects.filter(
+        trip=OuterRef("pk"), payment__status=FinancePaymentTransaction.Status.PAID
+    )
+    return trips.select_related("final_settlement").annotate(
+        approved_gross_total=_money_subquery(approved, "trip", "gross_requested"),
+        cash_paid_total=_money_subquery(paid, "trip", "net_cash_allocated"),
+        tds_paid_total=_money_subquery(paid, "trip", "tds_allocated"),
+    )
 
 
 def build_report(slug, params):
@@ -195,6 +219,7 @@ def build_report(slug, params):
                 "trip": trip.trip_no,
                 "client": trip.client.name,
                 "vendor": trip.vendor.display_name,
+                "basis": "SETTLED" if settlement else "PROVISIONAL",
                 "billing": billing.billing_amount,
                 "vendor_cost": vendor_cost,
                 "internal_costs": billing.internal_trip_costs,
@@ -206,11 +231,7 @@ def build_report(slug, params):
 
 
 def _trip_financial_row(trip):
-    items = trip.approval_items.filter(item_status=PaymentApprovalItem.Status.APPROVED)
-    approved = items.aggregate(total=Sum("gross_requested"))["total"] or Decimal("0")
-    allocations = trip.payment_allocations.filter(payment__status=FinancePaymentTransaction.Status.PAID)
-    cash = allocations.aggregate(total=Sum("net_cash_allocated"))["total"] or Decimal("0")
-    tds = allocations.aggregate(total=Sum("tds_allocated"))["total"] or Decimal("0")
+    """Build a row from a trip produced by ``annotate_financials``."""
     settlement = getattr(trip, "final_settlement", None)
     return {
         "trip": trip.trip_no,
@@ -218,53 +239,59 @@ def _trip_financial_row(trip):
         "vendor": trip.vendor.display_name,
         "status": trip.status,
         "vendor_cost": settlement.total_vendor_gross_cost if settlement else trip.vendor_freight_rate,
-        "approved_gross": approved,
-        "cash_paid": cash,
-        "tds": tds,
-        "remaining": approved - cash - tds,
+        "approved_gross": trip.approved_gross_total,
+        "cash_paid": trip.cash_paid_total,
+        "tds": trip.tds_paid_total,
+        "remaining": trip.approved_gross_total - trip.cash_paid_total - trip.tds_paid_total,
     }
 
 
 def _vendor_report(slug, trips):
-    rows = []
     today = timezone.localdate()
-    for vendor in Vendor.objects.filter(trips__in=trips).distinct().order_by("display_name"):
-        vendor_trips = trips.filter(vendor=vendor)
-        business = vendor_trips.aggregate(total=Sum("vendor_freight_rate"))["total"] or Decimal("0")
-        allocations = PaymentAllocation.objects.filter(
-            payment__vendor=vendor,
-            payment__status=FinancePaymentTransaction.Status.PAID,
-            trip__in=vendor_trips,
+    groups = {}
+    for trip in trips.order_by("vendor__display_name", "pk"):
+        group = groups.setdefault(
+            trip.vendor_id,
+            {
+                "vendor": trip.vendor.display_name,
+                "trips": 0,
+                "business": Decimal("0"),
+                "cash_paid": Decimal("0"),
+                "tds": Decimal("0"),
+                "unresolved": Decimal("0"),
+                "advance_cash_paid_unsettled": Decimal("0"),
+                "trip_ids": [],
+            },
         )
-        cash = allocations.aggregate(total=Sum("net_cash_allocated"))["total"] or Decimal("0")
-        tds = allocations.aggregate(total=Sum("tds_allocated"))["total"] or Decimal("0")
-        unresolved = sum(
-            (_trip_financial_row(trip)["remaining"] for trip in vendor_trips), Decimal("0")
-        )
+        group["trips"] += 1
+        group["business"] += trip.vendor_freight_rate
+        group["cash_paid"] += trip.cash_paid_total
+        group["tds"] += trip.tds_paid_total
+        group["unresolved"] += trip.approved_gross_total - trip.cash_paid_total - trip.tds_paid_total
+        if trip.settlement_status != "SETTLED":
+            group["advance_cash_paid_unsettled"] += trip.cash_paid_total
+        group["trip_ids"].append(trip.pk)
+    paid_per_item = PaymentAllocation.objects.filter(
+        approval_item=OuterRef("pk"), payment__status=FinancePaymentTransaction.Status.PAID
+    )
+    rows = []
+    for vendor_id, group in groups.items():
         oldest = (
             PaymentApprovalItem.objects.filter(
-                vendor=vendor, trip__in=vendor_trips, item_status=PaymentApprovalItem.Status.APPROVED
+                vendor_id=vendor_id,
+                trip_id__in=group["trip_ids"],
+                item_status=PaymentApprovalItem.Status.APPROVED,
             )
+            .annotate(paid_gross_total=_money_subquery(paid_per_item, "approval_item", "gross_amount_allocated"))
+            .filter(gross_requested__gt=F("paid_gross_total"))
             .order_by("batch__submitted_at")
             .values_list("batch__submitted_at", flat=True)
             .first()
         )
-        row = {
-            "vendor": vendor.display_name,
-            "trips": vendor_trips.count(),
-            "business": business,
-            "cash_paid": cash,
-            "tds": tds,
-            "unresolved": unresolved,
-            "oldest_unresolved_days": (today - oldest.date()).days if oldest else 0,
-        }
+        row = {key: value for key, value in group.items() if key not in {"trip_ids", "advance_cash_paid_unsettled"}}
+        row["oldest_unresolved_days"] = (today - oldest.date()).days if oldest else 0
         if slug == "vendor-advance-outstanding":
-            row["advance_cash_paid_unsettled"] = (
-                vendor_trips.exclude(settlement_status="SETTLED")
-                .filter(payment_allocations__payment__status="PAID")
-                .aggregate(total=Sum("payment_allocations__net_cash_allocated"))["total"]
-                or Decimal("0")
-            )
+            row["advance_cash_paid_unsettled"] = group["advance_cash_paid_unsettled"]
         rows.append(row)
     money_fields = ["business", "cash_paid", "tds", "unresolved"]
     if slug == "vendor-advance-outstanding":

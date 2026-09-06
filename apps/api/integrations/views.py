@@ -230,6 +230,17 @@ class UnmappedInboundViewSet(viewsets.ReadOnlyModelViewSet):
         object_id = str(request.data.get("object_id", ""))
         if object_type not in {"approval", "trip", "payment"} or not object_id:
             return Response({"detail": "A valid object type and ID are required"}, status=400)
+        from approvals.models import PaymentApprovalBatch
+        from operations.models import Trip
+        from payments.models import FinancePaymentTransaction
+
+        model = {"approval": PaymentApprovalBatch, "trip": Trip, "payment": FinancePaymentTransaction}[object_type]
+        try:
+            target_pk = int(object_id)
+        except ValueError:
+            return Response({"detail": "Object id must be a whole number"}, status=400)
+        if not model.objects.filter(pk=target_pk).exists():
+            return Response({"detail": f"No {object_type} with id {object_id} exists"}, status=400)
         item.message.object_type = object_type
         item.message.object_id = object_id
         item.message.save(update_fields=["object_type", "object_id", "updated_at"])
@@ -316,7 +327,9 @@ class WhatsAppWebhookView(APIView):
                 value = change.get("value", {})
                 for status_event in value.get("statuses", []):
                     message = IntegrationMessage.objects.filter(
-                        external_message_id=status_event.get("id", ""), direction="OUTBOUND"
+                        channel=IntegrationMessage.Channel.WHATSAPP,
+                        external_message_id=status_event.get("id", ""),
+                        direction="OUTBOUND",
                     ).first()
                     if message:
                         message.status = status_event.get("status", "").upper()
@@ -326,7 +339,13 @@ class WhatsAppWebhookView(APIView):
                 for inbound in value.get("messages", []):
                     message_id = inbound.get("id", "")
                     context_id = inbound.get("context", {}).get("id", "")
-                    outbound = IntegrationMessage.objects.filter(external_message_id=context_id).first()
+                    outbound = (
+                        IntegrationMessage.objects.filter(
+                            channel=IntegrationMessage.Channel.WHATSAPP, external_message_id=context_id, direction="OUTBOUND"
+                        ).first()
+                        if context_id
+                        else None
+                    )
                     button_payload = (
                         inbound.get("button", {}).get("payload", "")
                         or inbound.get("interactive", {}).get("button_reply", {}).get("id", "")

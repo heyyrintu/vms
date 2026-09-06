@@ -20,6 +20,7 @@ from payments.models import FinancePaymentTransaction, PaymentAllocation
 from payments.services import create_paid_payment
 
 from .models import ImportJob
+from .parsing import parse_text
 from .services import _date, _decimal, _vendor_code
 
 MIS_COLUMNS = [
@@ -56,11 +57,7 @@ MIS_COLUMNS = [
 
 
 def _text(value):
-    if value in (None, ""):
-        return ""
-    if isinstance(value, float) and value.is_integer():
-        return str(int(value))
-    return str(value).strip()
+    return parse_text(value)
 
 
 def _money(value, field, errors, default="0.00"):

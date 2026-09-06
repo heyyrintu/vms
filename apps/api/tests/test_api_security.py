@@ -125,3 +125,24 @@ def test_transporter_cannot_open_internal_multi_vendor_approval(trip_factory, us
 
     response = client.get(f"/api/approval-batches/{batch.pk}/")
     assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_password_change_invalidates_other_sessions(users):
+    from rest_framework.test import APIClient
+
+    user = users[User.Role.OPERATIONS]
+    user.set_password("OldPassword123!")
+    user.save()
+    first, second = APIClient(), APIClient()
+    for client in (first, second):
+        login = client.post("/api/auth/login/", {"username": user.username, "password": "OldPassword123!"}, format="json")
+        assert login.status_code == 200, login.data
+    response = first.post(
+        "/api/auth/password/change/",
+        {"current_password": "OldPassword123!", "new_password": "NewPassword12345!"},
+        format="json",
+    )
+    assert response.status_code == 200, response.data
+    assert first.get("/api/auth/me/").status_code == 200
+    assert second.get("/api/auth/me/").status_code == 403

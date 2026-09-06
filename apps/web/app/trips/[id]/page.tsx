@@ -8,15 +8,7 @@ import { api, listResults } from "@/lib/api";
 import type { Paginated, Trip } from "@/lib/types";
 import { TripIndentsPanel } from "@/components/TripIndentsPanel";
 import { CommentsPanel } from "@/components/CommentsPanel";
-import {
-  DateText,
-  Empty,
-  ErrorNotice,
-  Loading,
-  Money,
-  PageHeader,
-  StatusBadge,
-} from "@/components/UI";
+import { DateText, Empty, ErrorNotice, Loading, Money, PageHeader, StatusBadge } from "@/components/UI";
 
 type TripLedger = {
   trip_no: string;
@@ -96,8 +88,7 @@ export default function TripDetailPage() {
   });
   const documents = useQuery({
     queryKey: ["documents", "trip", id],
-    queryFn: () =>
-      api<Paginated<Document>>(`/documents/?object_type=trip&object_id=${id}`),
+    queryFn: () => api<Paginated<Document>>(`/documents/?object_type=trip&object_id=${id}`),
   });
   const settlements = useQuery({
     queryKey: ["settlement", id],
@@ -109,10 +100,7 @@ export default function TripDetailPage() {
   });
   const audit = useQuery({
     queryKey: ["audit", "trip", id],
-    queryFn: () =>
-      api<Paginated<Audit>>(
-        `/audit/?object_type=operations.Trip&object_id=${id}`,
-      ),
+    queryFn: () => api<Paginated<Audit>>(`/audit/?object_type=operations.Trip&object_id=${id}`),
     retry: false,
   });
   const [file, setFile] = useState<File | null>(null);
@@ -172,8 +160,7 @@ export default function TripDetailPage() {
         method: current ? "PATCH" : "POST",
         body: JSON.stringify({
           trip: Number(id),
-          final_freight:
-            settlementForm.final_freight || trip.data!.vendor_freight_rate,
+          final_freight: settlementForm.final_freight || trip.data!.vendor_freight_rate,
           additive_charges: settlementForm.additive_charges,
           vendor_deductions: settlementForm.vendor_deductions,
         }),
@@ -189,10 +176,7 @@ export default function TripDetailPage() {
         body: JSON.stringify({
           ...billingForm,
           trip: Number(id),
-          billing_amount:
-            billingForm.billing_amount ||
-            trip.data!.client_billing_amount ||
-            "0",
+          billing_amount: billingForm.billing_amount || trip.data!.client_billing_amount || "0",
           invoice_date: billingForm.invoice_date || null,
         }),
       }),
@@ -207,10 +191,7 @@ export default function TripDetailPage() {
   const docs = documents.data ? listResults(documents.data) : [];
   return (
     <>
-      <PageHeader
-        title={t.trip_no}
-        description={`${t.origin} → ${t.destination} · ${t.vendor_name}`}
-      >
+      <PageHeader title={t.trip_no} description={`${t.origin} → ${t.destination} · ${t.vendor_name}`}>
         <Link className="button" href="/approvals/new">
           Add to approval
         </Link>
@@ -225,8 +206,7 @@ export default function TripDetailPage() {
         <div>
           <span>Deployment / EDD</span>
           <strong>
-            <DateText value={t.deployment_date} /> ·{" "}
-            <DateText value={t.expected_delivery_date} />
+            <DateText value={t.deployment_date} /> · <DateText value={t.expected_delivery_date} />
           </strong>
         </div>
         <div>
@@ -245,9 +225,7 @@ export default function TripDetailPage() {
           <section className="panel">
             <div className="panel-head">
               <h2>Cost & advance breakdown</h2>
-              <span className="eyebrow">
-                {c.tds_policy?.replaceAll("_", " ")}
-              </span>
+              <span className="eyebrow">{c.tds_policy?.replaceAll("_", " ")}</span>
             </div>
             <div className="table-wrap">
               <table>
@@ -333,8 +311,7 @@ export default function TripDetailPage() {
                 <div>
                   <span>Cash / TDS</span>
                   <strong>
-                    <Money value={ledger.data!.cash_paid} /> /{" "}
-                    <Money value={ledger.data!.tds_deducted} />
+                    <Money value={ledger.data!.cash_paid} /> / <Money value={ledger.data!.tds_deducted} />
                   </strong>
                 </div>
                 <div>
@@ -348,9 +325,7 @@ export default function TripDetailPage() {
                   <strong>
                     <Money value={ledger.data!.gross_profit} />
                   </strong>
-                  <div className="muted">
-                    {ledger.data!.margin_percent || "0"}% margin
-                  </div>
+                  <div className="muted">{ledger.data!.margin_percent || "0"}% margin</div>
                 </div>
               </div>
             )}
@@ -395,18 +370,8 @@ export default function TripDetailPage() {
             <form className="panel-body form-grid" onSubmit={upload}>
               <div className="field">
                 <label>Document type</label>
-                <select
-                  className="input"
-                  value={kind}
-                  onChange={(e) => setKind(e.target.value)}
-                >
-                  {[
-                    "POD",
-                    "LR",
-                    "VENDOR_INVOICE",
-                    "PAYMENT_PROOF",
-                    "OTHER",
-                  ].map((value) => (
+                <select className="input" value={kind} onChange={(e) => setKind(e.target.value)}>
+                  {["POD", "LR", "VENDOR_INVOICE", "PAYMENT_PROOF", "OTHER"].map((value) => (
                     <option key={value}>{value}</option>
                   ))}
                 </select>
@@ -468,36 +433,23 @@ export default function TripDetailPage() {
                 <label>Settlement</label>
                 <StatusBadge value={t.settlement_status} />
               </div>
-              {![
-                "DELIVERED",
-                "SETTLEMENT_PENDING",
-                "SETTLEMENT_APPROVAL_PENDING",
-                "SETTLED",
-              ].includes(t.status) && (
+              {!["DELIVERED", "SETTLEMENT_PENDING", "SETTLEMENT_APPROVAL_PENDING", "SETTLED"].includes(t.status) && (
                 <button
                   className="button primary"
                   disabled={busy}
                   style={{ marginTop: 18 }}
-                  onClick={() =>
-                    run(() => api(`/trips/${id}/deliver/`, { method: "POST" }))
-                  }
+                  onClick={() => run(() => api(`/trips/${id}/deliver/`, { method: "POST" }))}
                 >
                   Mark delivered
                 </button>
               )}
             </div>
           </section>
-          {[
-            "DELIVERED",
-            "SETTLEMENT_PENDING",
-            "SETTLEMENT_APPROVAL_PENDING",
-          ].includes(t.status) && (
+          {["DELIVERED", "SETTLEMENT_PENDING", "SETTLEMENT_APPROVAL_PENDING"].includes(t.status) && (
             <form className="panel" onSubmit={saveSettlement}>
               <div className="panel-head">
                 <h2>Final settlement</h2>
-                {settlement && (
-                  <StatusBadge value={settlement.settlement_status} />
-                )}
+                {settlement && <StatusBadge value={settlement.settlement_status} />}
               </div>
               <div className="panel-body">
                 <div className="field">
@@ -506,9 +458,7 @@ export default function TripDetailPage() {
                     type="number"
                     min="0"
                     className="input"
-                    placeholder={
-                      settlement?.final_freight || t.vendor_freight_rate
-                    }
+                    placeholder={settlement?.final_freight || t.vendor_freight_rate}
                     value={settlementForm.final_freight}
                     onChange={(e) =>
                       setSettlementForm({
@@ -550,11 +500,9 @@ export default function TripDetailPage() {
                 </div>
                 {settlement && (
                   <div className="notice" style={{ marginTop: 12 }}>
-                    Final cost{" "}
-                    <Money value={settlement.total_vendor_gross_cost} />
+                    Final cost <Money value={settlement.total_vendor_gross_cost} />
                     <br />
-                    Remaining cash{" "}
-                    <Money value={settlement.remaining_cash_payable} />
+                    Remaining cash <Money value={settlement.remaining_cash_payable} />
                     <br />
                     Missing: {settlement.missing_documents.join(", ") || "none"}
                   </div>
@@ -595,12 +543,7 @@ export default function TripDetailPage() {
               </div>
             </form>
           )}{" "}
-          {[
-            "DELIVERED",
-            "SETTLEMENT_PENDING",
-            "SETTLEMENT_APPROVAL_PENDING",
-            "SETTLED",
-          ].includes(t.status) && (
+          {["DELIVERED", "SETTLEMENT_PENDING", "SETTLEMENT_APPROVAL_PENDING", "SETTLED"].includes(t.status) && (
             <form className="panel" onSubmit={saveBilling}>
               <div className="panel-head">
                 <h2>Client billing</h2>
@@ -664,20 +607,14 @@ export default function TripDetailPage() {
                       })
                     }
                   >
-                    {[
-                      "DRAFT",
-                      "INVOICED",
-                      "PARTIALLY_RECEIVED",
-                      "RECEIVED",
-                    ].map((value) => (
+                    {["DRAFT", "INVOICED", "PARTIALLY_RECEIVED", "RECEIVED"].map((value) => (
                       <option key={value}>{value}</option>
                     ))}
                   </select>
                 </div>
                 {billing && (
                   <div className="notice">
-                    Profit <Money value={billing.gross_profit} /> ·{" "}
-                    {billing.margin_percent}% margin
+                    Profit <Money value={billing.gross_profit} /> · {billing.margin_percent}% margin
                   </div>
                 )}
                 <button className="button" disabled={busy}>
