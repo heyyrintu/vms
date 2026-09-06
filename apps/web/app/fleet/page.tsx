@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, listResults } from "@/lib/api";
 import type { Driver, Paginated, Vehicle, Vendor } from "@/lib/types";
 import { Empty, ErrorNotice, Loading, PageHeader, StatusBadge } from "@/components/UI";
@@ -17,6 +17,7 @@ async function uploadDriverDocument(file: File, kind: string, driverId: number) 
 }
 
 export default function FleetPage() {
+  const queryClient = useQueryClient();
   const data = useQuery({
     queryKey: ["fleet"],
     queryFn: async () => ({
@@ -67,6 +68,7 @@ export default function FleetPage() {
       if (aadhaar) await uploadDriverDocument(aadhaar, "AADHAAR", created.id);
       if (pan) await uploadDriverDocument(pan, "PAN", created.id);
       if (licence) await uploadDriverDocument(licence, "DRIVING_LICENSE", created.id);
+      await queryClient.invalidateQueries({ queryKey: ["documents", "driver", created.id] });
       setDriver({ name: "", phone: "", vendor: "", active: true });
       setEditingDriver(null);
       setAadhaar(null);

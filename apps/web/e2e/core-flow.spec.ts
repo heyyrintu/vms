@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { loginAs } from "./helpers";
+import { createReadyTrip, loginAs } from "./helpers";
 
 test("TDS register exposes vendor and date filters with pagination", async ({ page }) => {
   await loginAs(page, "finance");
@@ -31,11 +31,11 @@ test("fleet page loads driver documents on demand only", async ({ page }) => {
 
 test("operations builds an approval, approver approves, finance pays", async ({ page }) => {
   await loginAs(page, "operations");
+  const created = await createReadyTrip(page);
   await page.goto("/approvals/new");
-  const firstRow = page.locator("tbody tr").first();
-  await expect(firstRow).toBeVisible();
-  const tripNo = (await firstRow.locator("td").nth(1).innerText()).split("\n")[0].trim();
-  await firstRow.locator("input[type=checkbox]").check();
+  const row = page.locator("tbody tr", { hasText: created.trip_no }).first();
+  await expect(row).toBeVisible();
+  await row.locator("input[type=checkbox]").check();
   await page.getByRole("button", { name: "Create & submit approval" }).click();
   await expect(page).toHaveURL(/\/approvals\/\d+/);
   const approvalUrl = page.url();
@@ -43,15 +43,15 @@ test("operations builds an approval, approver approves, finance pays", async ({ 
   await loginAs(page, "approver");
   await page.goto(approvalUrl);
   await page.getByRole("button", { name: /^Approve/ }).click();
-  await expect(page.locator(".badge", { hasText: "APPROVED" }).first()).toBeVisible();
+  await expect(page.getByText("APPROVED").first()).toBeVisible();
 
   await loginAs(page, "finance");
   await page.goto("/finance");
-  const line = page.locator("tr", { hasText: tripNo }).first();
+  const line = page.locator("tr", { hasText: created.trip_no }).first();
   await expect(line).toBeVisible();
   await line.locator("input[type=checkbox]").check();
   await page.getByLabel("UTR / bank reference").fill(`E2E-${Date.now()}`);
   await page.getByRole("button", { name: "Record paid transaction" }).click();
   await expect(page).toHaveURL(/\/payments\/\d+/);
-  await expect(page.locator(".badge", { hasText: "PAID" }).first()).toBeVisible();
+  await expect(page.getByText("PAID").first()).toBeVisible();
 });

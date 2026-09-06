@@ -51,7 +51,13 @@ def parse_datetime(value, field, errors, epoch, *, required=False, invalid_messa
     elif isinstance(value, int | float):
         try:
             converted = from_excel(value, epoch)
-            parsed = converted if isinstance(converted, datetime) else datetime.combine(converted, time.min)
+            if isinstance(converted, datetime):
+                parsed = converted
+            elif isinstance(converted, date):
+                parsed = datetime.combine(converted, time.min)
+            else:
+                # Serials between 0 and 1 are times of day, which no importer column accepts.
+                parsed = None
         except (ValueError, OverflowError):
             parsed = None
     elif isinstance(value, str):

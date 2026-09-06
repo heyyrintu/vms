@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { api, listResults } from "@/lib/api";
@@ -33,20 +34,30 @@ type Ledger = {
 };
 
 function ChequeProof({ bankId, uploaded }: { bankId: number; uploaded: boolean }) {
+  const [open, setOpen] = useState(false);
   const proof = useQuery({
     queryKey: ["documents", "vendor-bank-account", bankId],
     queryFn: async () =>
       listResults(
         await api<Paginated<DocumentRecord>>(`/documents/?object_type=vendor_bank_account&object_id=${bankId}`),
       )[0] ?? null,
+    enabled: open,
   });
+  if (!uploaded) return <StatusBadge value="MISSING" />;
+  if (!open)
+    return (
+      <button type="button" className="button small" onClick={() => setOpen(true)}>
+        Show proof
+      </button>
+    );
+  if (proof.isPending) return <span className="muted">Loading…</span>;
   if (proof.data)
     return (
       <a className="chip" href={proof.data.download_url}>
         View proof
       </a>
     );
-  return <StatusBadge value={uploaded ? "VERIFIED" : "MISSING"} />;
+  return <StatusBadge value="VERIFIED" />;
 }
 
 export default function VendorDetailPage() {

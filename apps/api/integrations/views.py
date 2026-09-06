@@ -235,7 +235,11 @@ class UnmappedInboundViewSet(viewsets.ReadOnlyModelViewSet):
         from payments.models import FinancePaymentTransaction
 
         model = {"approval": PaymentApprovalBatch, "trip": Trip, "payment": FinancePaymentTransaction}[object_type]
-        if not object_id.isdigit() or not model.objects.filter(pk=int(object_id)).exists():
+        try:
+            target_pk = int(object_id)
+        except ValueError:
+            return Response({"detail": "Object id must be a whole number"}, status=400)
+        if not model.objects.filter(pk=target_pk).exists():
             return Response({"detail": f"No {object_type} with id {object_id} exists"}, status=400)
         item.message.object_type = object_type
         item.message.object_id = object_id

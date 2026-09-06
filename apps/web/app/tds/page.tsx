@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { api, listResults } from "@/lib/api";
+import { api, apiAll, listResults } from "@/lib/api";
 import { useRegisterFilters } from "@/lib/useRegisterFilters";
 import type { Paginated, Vendor } from "@/lib/types";
 import { DateText, Empty, ErrorNotice, Loading, Money, PageHeader, Pagination, StatusBadge } from "@/components/UI";
@@ -28,7 +28,7 @@ export default function TDSRegisterPage() {
   });
   const vendors = useQuery({
     queryKey: ["vendors", "filter"],
-    queryFn: () => api<Paginated<Vendor>>("/vendors/?page_size=200"),
+    queryFn: () => apiAll<Vendor>("/vendors/"),
   });
   const entries = useQuery({ queryKey: ["tds", query], queryFn: () => api<Paginated<TDS>>(`/tds/?${query}`) });
   const rows = entries.data ? listResults(entries.data) : [];
@@ -49,12 +49,11 @@ export default function TDSRegisterPage() {
               onChange={(e) => set("vendor", e.target.value)}
             >
               <option value="">All transporters</option>
-              {vendors.data &&
-                listResults(vendors.data).map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.display_name}
-                  </option>
-                ))}
+              {vendors.data?.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.display_name}
+                </option>
+              ))}
             </select>
           </div>
           <div className="field">

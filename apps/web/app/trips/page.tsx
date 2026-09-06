@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
-import { api, listResults } from "@/lib/api";
+import { api, apiAll, listResults } from "@/lib/api";
 import type { Client, Paginated, Trip, Vendor } from "@/lib/types";
 import {
   DateText,
@@ -43,7 +43,7 @@ export default function TripRegisterPage() {
   const masters = useQuery({
     queryKey: ["trip-filter-masters"],
     queryFn: async () => ({
-      vendors: listResults(await api<Paginated<Vendor>>("/vendors/?page_size=200")),
+      vendors: await apiAll<Vendor>("/vendors/"),
       clients: listResults(await api<Paginated<Client>>("/clients/?page_size=200")),
     }),
   });
@@ -65,8 +65,9 @@ export default function TripRegisterPage() {
         <div className="panel-body">
           <div className="filters">
             <div className="field span-2">
-              <label>Search trip, indent, vehicle, route or vendor</label>
+              <label htmlFor="trip-filter-search">Search trip, indent, vehicle, route or vendor</label>
               <input
+                id="trip-filter-search"
                 className="input"
                 value={search}
                 onChange={(e) => {
@@ -77,8 +78,9 @@ export default function TripRegisterPage() {
               />
             </div>
             <div className="field">
-              <label>Status</label>
+              <label htmlFor="trip-filter-status">Status</label>
               <select
+                id="trip-filter-status"
                 aria-label="Trip status"
                 className="input"
                 value={status}
@@ -96,8 +98,9 @@ export default function TripRegisterPage() {
               </select>
             </div>
             <div className="field">
-              <label>Vendor</label>
+              <label htmlFor="trip-filter-vendor">Vendor</label>
               <select
+                id="trip-filter-vendor"
                 className="input"
                 value={vendor}
                 onChange={(e) => {
@@ -114,8 +117,9 @@ export default function TripRegisterPage() {
               </select>
             </div>
             <div className="field">
-              <label>Client</label>
+              <label htmlFor="trip-filter-client">Client</label>
               <select
+                id="trip-filter-client"
                 className="input"
                 value={client}
                 onChange={(e) => {
@@ -132,8 +136,9 @@ export default function TripRegisterPage() {
               </select>
             </div>
             <div className="field">
-              <label>Branch</label>
+              <label htmlFor="trip-filter-branch">Branch</label>
               <input
+                id="trip-filter-branch"
                 className="input"
                 value={branch}
                 onChange={(e) => {
@@ -143,8 +148,9 @@ export default function TripRegisterPage() {
               />
             </div>
             <div className="field">
-              <label>Vehicle type</label>
+              <label htmlFor="trip-filter-vehicle-type">Vehicle type</label>
               <input
+                id="trip-filter-vehicle-type"
                 className="input"
                 value={vehicleType}
                 onChange={(e) => {
@@ -155,8 +161,9 @@ export default function TripRegisterPage() {
               />
             </div>
             <div className="field">
-              <label>From date</label>
+              <label htmlFor="trip-filter-from">From date</label>
               <input
+                id="trip-filter-from"
                 type="date"
                 className="input"
                 value={dateFrom}
@@ -167,8 +174,9 @@ export default function TripRegisterPage() {
               />
             </div>
             <div className="field">
-              <label>To date</label>
+              <label htmlFor="trip-filter-to">To date</label>
               <input
+                id="trip-filter-to"
                 type="date"
                 className="input"
                 value={dateTo}
