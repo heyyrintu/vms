@@ -1,6 +1,6 @@
 import hashlib
-from datetime import date, datetime, time
-from decimal import Decimal, InvalidOperation
+from datetime import datetime
+from decimal import Decimal
 from io import BytesIO
 
 from django.db import transaction
@@ -8,12 +8,12 @@ from django.utils import timezone
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
-from openpyxl.utils.datetime import from_excel
 
 from audit.models import record_audit
 from operations.models import Client, Indent
 
 from .models import ImportJob
+from .parsing import parse_datetime, parse_decimal, parse_text
 
 INDENT_COLUMNS = [
     "FROM",
@@ -39,64 +39,18 @@ REQUIRED_INDENT_COLUMNS = INDENT_COLUMNS[:12]
 
 
 def _text(value):
-    if value is None:
-        return ""
-    if isinstance(value, float) and value.is_integer():
-        return str(int(value))
-    return str(value).strip()
+    return parse_text(value)
 
 
 def _decimal(value, field, errors):
-    if value in (None, ""):
-        errors.append(f"{field} is required")
-        return None
-    try:
-        result = Decimal(str(value)).quantize(Decimal("0.001"))
-    except (InvalidOperation, ValueError):
-        errors.append(f"{field} must be numeric")
-        return None
-    if result < 0:
+    result = parse_decimal(value, field, errors, places="0.001")
+    if result is not None and result < 0:
         errors.append(f"{field} cannot be negative")
     return result
 
 
 def _datetime(value, field, errors, epoch, required=False):
-    if value in (None, ""):
-        if required:
-            errors.append(f"{field} is required")
-        return None
-    parsed = None
-    if isinstance(value, datetime):
-        parsed = value
-    elif isinstance(value, date):
-        parsed = datetime.combine(value, time.min)
-    elif isinstance(value, int | float):
-        try:
-            converted = from_excel(value, epoch)
-            parsed = converted if isinstance(converted, datetime) else datetime.combine(converted, time.min)
-        except (ValueError, OverflowError):
-            pass
-    elif isinstance(value, str):
-        for fmt in (
-            "%Y-%m-%d %H:%M",
-            "%Y-%m-%d %H:%M:%S",
-            "%d/%m/%Y %H:%M",
-            "%d-%m-%Y %H:%M",
-            "%Y-%m-%d",
-            "%d/%m/%Y",
-            "%d-%m-%Y",
-        ):
-            try:
-                parsed = datetime.strptime(value.strip(), fmt)
-                break
-            except ValueError:
-                continue
-    if parsed is None:
-        errors.append(f"{field} is not a valid date/time")
-        return None
-    if timezone.is_naive(parsed):
-        parsed = timezone.make_aware(parsed, timezone.get_current_timezone())
-    return parsed
+    return parse_datetime(value, field, errors, epoch, required=required)
 
 
 def preview_indent_workbook(content, *, client):
