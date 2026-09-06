@@ -333,12 +333,19 @@ function VendorPaymentGroup({ group, refresh }: { group: PendingGroup; refresh: 
           )}
           <div className="form-grid">
             <div className="field">
-              <label>Payment date</label>
-              <input className="input" type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+              <label htmlFor="payment-date">Payment date</label>
+              <input
+                id="payment-date"
+                className="input"
+                type="date"
+                value={date}
+                onChange={(event) => setDate(event.target.value)}
+              />
             </div>
             <div className="field">
-              <label>Pay to verified bank</label>
+              <label htmlFor="payment-bank">Pay to verified bank</label>
               <select
+                id="payment-bank"
                 required
                 className="input"
                 value={bankAccount}
@@ -355,8 +362,9 @@ function VendorPaymentGroup({ group, refresh }: { group: PendingGroup; refresh: 
               </select>
             </div>
             <div className="field span-2">
-              <label>UTR / bank reference</label>
+              <label htmlFor="payment-utr">UTR / bank reference</label>
               <input
+                id="payment-utr"
                 className="input"
                 required
                 value={utr}
@@ -365,8 +373,9 @@ function VendorPaymentGroup({ group, refresh }: { group: PendingGroup; refresh: 
               />
             </div>
             <div className="field span-2">
-              <label>Payment proof</label>
+              <label htmlFor="payment-proof">Payment proof</label>
               <input
+                id="payment-proof"
                 className="input"
                 type="file"
                 accept=".pdf,.png,.jpg,.jpeg"
