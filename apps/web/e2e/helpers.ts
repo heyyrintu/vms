@@ -76,7 +76,7 @@ export async function createReadyTrip(page: Page): Promise<{ id: number; trip_no
       bank_name: "E2E Bank",
       account_holder: "E2E Vendor",
       account_number: "123456789012",
-      ifsc_code: "E2EB0000001",
+      ifsc_code: "HDFC0001234",
     });
   }
   const indent = indents[0];
