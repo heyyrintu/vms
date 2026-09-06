@@ -89,11 +89,14 @@ def test_cancelled_trip_cannot_be_revived_by_decision(trip_factory, users, decis
     batch = approval(trip, users, approve=False)
     client = client_for(users[User.Role.OPERATIONS])
     assert client.post(f"/api/trips/{trip.pk}/cancel/", {}, format="json").status_code == 200
-    with pytest.raises(ValueError, match="Cancelled"):
+    batch.refresh_from_db()
+    with pytest.raises(ValueError):
         decide_batch(actor=users[User.Role.APPROVER], batch=batch, decision=decision, comment="Test decision")
     trip.refresh_from_db()
     assert trip.status == "CANCELLED"
-    assert batch.items.get().item_status == "PENDING"
+    # The line is closed so the batch cannot stay pending forever.
+    assert batch.items.get().item_status == "SUPERSEDED"
+    assert batch.status != "PENDING"
 
 
 @pytest.mark.django_db

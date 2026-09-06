@@ -20,6 +20,7 @@ function VendorPaymentGroup({ group, refresh }: { group: PendingGroup; refresh: 
   const [utr, setUtr] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [proof, setProof] = useState<File | null>(null);
+  const [proofId, setProofId] = useState<number | undefined>();
   const [error, setError] = useState<unknown>();
   const [busy, setBusy] = useState(false);
   const chosen = group.items.filter((item) => selected.includes(item.approval_item_id));
@@ -46,14 +47,15 @@ function VendorPaymentGroup({ group, refresh }: { group: PendingGroup; refresh: 
     setBusy(true);
     setError(undefined);
     try {
-      let proofId: number | undefined;
-      if (proof) {
+      let uploadedProof = proofId;
+      if (proof && !uploadedProof) {
         const upload = new FormData();
         upload.append("file", proof);
         upload.append("kind", "PAYMENT_PROOF");
         upload.append("object_type", "approval");
         upload.append("object_id", String(chosen[0].approval_id));
-        proofId = (await api<{ id: number }>("/documents/", { method: "POST", body: upload })).id;
+        uploadedProof = (await api<{ id: number }>("/documents/", { method: "POST", body: upload })).id;
+        setProofId(uploadedProof);
       }
       const payment = await api<Payment>("/payments/", {
         method: "POST",
@@ -63,7 +65,7 @@ function VendorPaymentGroup({ group, refresh }: { group: PendingGroup; refresh: 
           payment_date: date,
           utr_reference: utr,
           payment_mode: "BANK_TRANSFER",
-          proof_document: proofId,
+          proof_document: uploadedProof,
           allocations: chosen.map((item) => ({
             approval_item_id: item.approval_item_id,
             gross_amount_allocated: (Number(allocations[item.approval_item_id]?.tds ?? item.remaining_tds) + Number(allocations[item.approval_item_id]?.net ?? item.remaining_net)).toFixed(2),
@@ -105,7 +107,7 @@ function VendorPaymentGroup({ group, refresh }: { group: PendingGroup; refresh: 
       <div className="field"><label>Payment date</label><input className="input" type="date" value={date} onChange={(event) => setDate(event.target.value)} /></div>
       <div className="field"><label>Pay to verified bank</label><select required className="input" value={bankAccount} onChange={(event) => setBankAccount(event.target.value)}><option value="">Select bank account</option>{group.bank_accounts.filter((row) => row.active).map((row) => <option value={row.id} key={row.id}>{row.bank_name} · {row.masked_account_number} · {row.ifsc_code}</option>)}</select></div>
       <div className="field span-2"><label>UTR / bank reference</label><input className="input" required value={utr} onChange={(event) => setUtr(event.target.value)} placeholder="Enter confirmed reference" /></div>
-      <div className="field span-2"><label>Payment proof</label><input className="input" type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={(event) => setProof(event.target.files?.[0] ?? null)} /></div>
+      <div className="field span-2"><label>Payment proof</label><input className="input" type="file" accept=".pdf,.png,.jpg,.jpeg" onChange={(event) => { setProof(event.target.files?.[0] ?? null); setProofId(undefined); }} /></div>
     </div><div className="actions" style={{ justifyContent: "flex-end", marginTop: 12 }}><span className="muted">Gross <Money value={totals.gross} /> · TDS <Money value={totals.tds} /> · Net cash <Money value={totals.net} /></span><button className="button primary" disabled={!utr.trim() || !bankAccount || busy || Boolean(allocationError) || totals.gross <= 0} onClick={pay}>{busy ? "Recording…" : "Record paid transaction"}</button></div></div>}
   </section>;
 }

@@ -2,13 +2,7 @@ from celery import shared_task
 from django.utils import timezone
 
 from .models import IntegrationMessage
-from .services import deliver_message, queue_message
-
-
-@shared_task(autoretry_for=(Exception,), retry_backoff=True, max_retries=5)
-def send_message_task(message_data):
-    message = queue_message(**message_data)
-    return deliver_message(message).pk
+from .services import deliver_message
 
 
 @shared_task(autoretry_for=(Exception,), retry_backoff=True, max_retries=5)

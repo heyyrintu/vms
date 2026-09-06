@@ -232,7 +232,10 @@ class Trip(TimeStampedModel):
         if self.driver_id:
             self.driver_name_snapshot = self.driver.name
             self.driver_phone_snapshot = self.driver.phone
-        self.full_clean()
+        lifecycle_fields = {"status", "pod_status", "settlement_status", "actual_delivery_at", "notes", "updated_at"}
+        update_fields = kwargs.get("update_fields")
+        if not update_fields or not set(update_fields) <= lifecycle_fields:
+            self.full_clean()
         super().save(*args, **kwargs)
         TripIndent.objects.filter(trip=self).exclude(indent=self.indent).update(is_primary=False)
         TripIndent.objects.update_or_create(

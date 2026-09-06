@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from django.db.models import Q, Sum
+from django.db.models import Prefetch, Q, Sum
 from django.http import HttpResponse
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
@@ -47,7 +47,7 @@ def _document_payload(document, request):
         "original_name": document.original_name,
         "scan_status": document.scan_status,
         "uploaded_at": document.created_at,
-        "download_url": request.build_absolute_uri(f"/api/documents/{document.pk}/download/"),
+        "download_url": f"/api/documents/{document.pk}/download/",
     }
 
 
@@ -191,6 +191,7 @@ class FinancePendingView(APIView):
             PaymentApprovalItem.objects.filter(item_status=PaymentApprovalItem.Status.APPROVED)
             .exclude(trip__status__in=[Trip.Status.CANCELLED, Trip.Status.CANCELLED_WITH_PAYMENT, Trip.Status.SETTLED])
             .select_related("vendor", "trip", "trip__vehicle", "trip__driver", "trip__client", "batch")
+            .prefetch_related(Prefetch("allocations", queryset=PaymentAllocation.objects.select_related("payment")))
             .order_by("batch__updated_at", "id")
         )
         eligible_items = []
@@ -551,7 +552,10 @@ class DashboardView(APIView):
             trips = trips.filter(vendor_id=request.user.vendor_id)
             items = items.filter(vendor_id=request.user.vendor_id)
         unpaid = Decimal("0")
-        for item in items.filter(item_status=PaymentApprovalItem.Status.APPROVED):
+        approved_items = items.filter(item_status=PaymentApprovalItem.Status.APPROVED).prefetch_related(
+            Prefetch("allocations", queryset=PaymentAllocation.objects.select_related("payment"))
+        )
+        for item in approved_items:
             unpaid += max(Decimal("0"), item.net_requested - paid_totals(item)["net"])
         unsettled_cash = (
             PaymentAllocation.objects.filter(

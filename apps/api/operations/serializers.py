@@ -166,18 +166,23 @@ class IndentSerializer(serializers.ModelSerializer):
             "indent_date": {"required": False},
         }
 
+    def _trips(self, obj):
+        cache = getattr(obj, "_prefetched_objects_cache", {})
+        rows = cache["assigned_trips"] if "assigned_trips" in cache else obj.assigned_trips.all()
+        return sorted(rows, key=lambda row: (row.deployment_date, row.pk), reverse=True)
+
     @extend_schema_field(serializers.IntegerField())
     def get_trip_count(self, obj):
-        return obj.assigned_trips.count()
+        return len(self._trips(obj))
 
     @extend_schema_field(serializers.ListField(child=serializers.CharField()))
     def get_trip_numbers(self, obj):
-        return list(obj.assigned_trips.order_by("-deployment_date", "-id").values_list("trip_no", flat=True))
+        return [trip.trip_no for trip in self._trips(obj)]
 
     @extend_schema_field(serializers.ListField(child=serializers.DictField()))
     def get_trip_summaries(self, obj):
         summaries = []
-        for trip in sorted(obj.assigned_trips.all(), key=lambda row: (row.deployment_date, row.pk), reverse=True):
+        for trip in self._trips(obj):
             if trip.status == Trip.Status.ADVANCE_PARTIALLY_PAID:
                 payment_state = "PARTIALLY PAID"
             elif trip.status in {
@@ -273,9 +278,8 @@ class DocumentSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(serializers.URLField())
     def get_download_url(self, obj):
-        request = self.context.get("request")
-        path = f"/api/documents/{obj.pk}/download/"
-        return request.build_absolute_uri(path) if request else path
+        # Relative so the Next.js /api rewrite proxies it with the session cookie.
+        return f"/api/documents/{obj.pk}/download/"
 
 
 class TripRecoverySerializer(serializers.ModelSerializer):

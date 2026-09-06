@@ -27,20 +27,49 @@ def _resolved_policy(trip):
     )
 
 
+ADVANCE_PRE_APPROVAL_STATES = {Trip.Status.DRAFT, Trip.Status.READY, Trip.Status.ADVANCE_APPROVAL_PENDING}
+
+
+def _charge_total(queryset):
+    return queryset.aggregate(total=Sum("amount"))["total"] or Decimal("0")
+
+
+def _charge_sums(trip):
+    """Sum advance-eligible charges, using prefetched rows when a list view provides them."""
+    cache = getattr(trip, "_prefetched_objects_cache", {})
+    if "charges" in cache:
+        rows = [row for row in cache["charges"] if row.advance_eligible]
+        add, deduct = TripCharge.Direction.ADD, TripCharge.Direction.DEDUCT
+        return (
+            sum((row.amount for row in rows if row.direction == add), Decimal("0")),
+            sum((row.amount for row in rows if row.direction == deduct), Decimal("0")),
+            sum((row.amount for row in rows if row.direction == add and row.tds_eligible), Decimal("0")),
+            sum((row.amount for row in rows if row.direction == deduct and row.tds_eligible), Decimal("0")),
+        )
+    charges = trip.charges.filter(advance_eligible=True)
+    return (
+        _charge_total(charges.filter(direction=TripCharge.Direction.ADD)),
+        _charge_total(charges.filter(direction=TripCharge.Direction.DEDUCT)),
+        _charge_total(charges.filter(direction=TripCharge.Direction.ADD, tds_eligible=True)),
+        _charge_total(charges.filter(direction=TripCharge.Direction.DEDUCT, tds_eligible=True)),
+    )
+
+
+def _previous_tds(trip):
+    cache = getattr(trip, "_prefetched_objects_cache", {})
+    if "tds_entries" in cache:
+        return sum((row.tds_amount for row in cache["tds_entries"] if row.status == "POSTED"), Decimal("0"))
+    return trip.tds_entries.filter(status="POSTED").aggregate(total=Sum("tds_amount"))["total"] or Decimal("0")
+
+
 def calculate_trip_advance(trip, *, manual_tds=None, manual_tds_base=None, manual_reason=""):
     settings = OrganizationSettings.load()
     policy, rate = _resolved_policy(trip)
-    charges = trip.charges.filter(advance_eligible=True)
-    additions = charges.filter(direction=TripCharge.Direction.ADD).aggregate(total=Sum("amount"))["total"] or Decimal("0")
-    deductions = charges.filter(direction=TripCharge.Direction.DEDUCT).aggregate(total=Sum("amount"))["total"] or Decimal("0")
-    taxable_additions = charges.filter(direction=TripCharge.Direction.ADD, tds_eligible=True).aggregate(total=Sum("amount"))["total"] or Decimal("0")
-    taxable_deductions = charges.filter(direction=TripCharge.Direction.DEDUCT, tds_eligible=True).aggregate(total=Sum("amount"))["total"] or Decimal("0")
+    additions, deductions, taxable_additions, taxable_deductions = _charge_sums(trip)
     advance_percent = trip.advance_percent if trip.advance_percent is not None else settings.default_advance_percent
     freight_advance = trip.vendor_freight_rate * advance_percent / Decimal("100")
     current_taxable = freight_advance + taxable_additions - taxable_deductions
-    previous_tds = (
-        trip.tds_entries.filter(status="POSTED").aggregate(total=Sum("tds_amount"))["total"] or Decimal("0")
-    )
+    previous_tds = _previous_tds(trip)
     return calculate_advance(
         freight_rate=trip.vendor_freight_rate,
         advance_percent=advance_percent,
@@ -58,7 +87,9 @@ def calculate_trip_advance(trip, *, manual_tds=None, manual_tds_base=None, manua
 
 
 def _recalculate_batch(batch):
-    totals = batch.items.exclude(item_status=PaymentApprovalItem.Status.SUPERSEDED).aggregate(
+    totals = batch.items.exclude(
+        item_status__in=[PaymentApprovalItem.Status.SUPERSEDED, PaymentApprovalItem.Status.REJECTED]
+    ).aggregate(
         gross=Sum("gross_requested"), tds=Sum("tds_this_request"), net=Sum("net_requested")
     )
     batch.gross_requested = totals["gross"] or 0
@@ -89,7 +120,12 @@ def _revision_context(trips, purpose):
             ("vendor_freight_rate", trip.vendor_freight_rate),
             ("advance_percent", trip.advance_percent),
         ):
-            prior = old.vendor_id if field == "vendor" else getattr(old, f"{field}_snapshot", getattr(old, field, None))
+            if field == "vendor":
+                prior = old.vendor_id
+            elif field == "vendor_freight_rate":
+                prior = old.freight_rate_snapshot
+            else:
+                prior = old.advance_percent
             if str(prior) != str(current):
                 diff.append({"trip_id": trip.pk, "field": field, "old": str(prior), "new": str(current)})
     return previous, previous.revision_no + 1, diff
@@ -328,11 +364,11 @@ def decide_batch(*, batch, actor, decision, item_ids=None, comment="", request_i
         item.approver_note = comment
         item.save(update_fields=["item_status", "approver_note", "updated_at"])
         if decision == ApprovalAction.Action.APPROVE:
-            item.trip.status = (
-                Trip.Status.SETTLEMENT_APPROVAL_PENDING
-                if batch.purpose == "FINAL_SETTLEMENT"
-                else Trip.Status.ADVANCE_APPROVED
-            )
+            if batch.purpose == "FINAL_SETTLEMENT":
+                item.trip.status = Trip.Status.SETTLEMENT_APPROVAL_PENDING
+            elif item.trip.status in ADVANCE_PRE_APPROVAL_STATES:
+                # Never rewind a trip that was already deployed or delivered.
+                item.trip.status = Trip.Status.ADVANCE_APPROVED
             if batch.purpose == "FINAL_SETTLEMENT" and hasattr(item.trip, "final_settlement"):
                 item.trip.final_settlement.settlement_status = "APPROVED"
                 item.trip.final_settlement.approved_at = timezone.now()
@@ -340,11 +376,10 @@ def decide_batch(*, batch, actor, decision, item_ids=None, comment="", request_i
                     update_fields=["settlement_status", "approved_at", "updated_at"]
                 )
         elif decision in {ApprovalAction.Action.REJECT, ApprovalAction.Action.SEND_BACK}:
-            item.trip.status = (
-                Trip.Status.SETTLEMENT_PENDING
-                if batch.purpose == "FINAL_SETTLEMENT"
-                else Trip.Status.READY
-            )
+            if batch.purpose == "FINAL_SETTLEMENT":
+                item.trip.status = Trip.Status.SETTLEMENT_PENDING
+            elif item.trip.status == Trip.Status.ADVANCE_APPROVAL_PENDING:
+                item.trip.status = Trip.Status.READY
             if batch.purpose == "FINAL_SETTLEMENT" and hasattr(item.trip, "final_settlement"):
                 item.trip.final_settlement.settlement_status = "DRAFT"
                 item.trip.final_settlement.approved_at = None

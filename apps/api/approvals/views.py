@@ -39,7 +39,7 @@ class ApprovalBatchViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "head", "options"]
 
     def get_queryset(self):
-        queryset = PaymentApprovalBatch.objects.select_related("client", "requested_by").prefetch_related("items__trip", "items__vendor", "actions__actor").order_by("-created_at")
+        queryset = PaymentApprovalBatch.objects.select_related("client", "requested_by").prefetch_related("items__trip", "items__vendor", "items__allocations__payment", "stage_decisions", "actions__actor").order_by("-created_at")
         if getattr(self.request.user, "role", "") == User.Role.OPERATIONS:
             queryset = queryset.filter(requested_by=self.request.user)
         if getattr(self.request.user, "role", "") == User.Role.TRANSPORTER:

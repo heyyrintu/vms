@@ -121,6 +121,10 @@ SPECTACULAR_SETTINGS = {
 }
 
 _configured_web_origins = _csv_env("WEB_ORIGIN", "http://localhost:3000")
+# Public browser-facing origin used for links in emails and notifications.
+WEB_ORIGIN = _configured_web_origins[0].rstrip("/")
+# Signed WhatsApp quick-reply buttons may approve/reject; set false to make them record-only.
+WHATSAPP_INTERACTIVE_DECISIONS = os.getenv("WHATSAPP_INTERACTIVE_DECISIONS", "true").lower() == "true"
 _configured_csrf_origins = _csv_env("CSRF_TRUSTED_ORIGINS", "http://localhost:3000")
 _local_dev_origins: list[str] = []
 if DEBUG:

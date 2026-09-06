@@ -262,7 +262,7 @@ class TripViewSet(AuditedModelViewSet):
     search_fields = ["trip_no", "indent__indent_no", "indents__challan_no", "indents__ship_to_party_name", "vehicle_registration_snapshot", "vendor__display_name", "origin", "destination"]
 
     def get_queryset(self):
-        queryset = Trip.objects.select_related("client", "indent", "vendor", "vehicle", "driver").prefetch_related("charges", "indent_links__indent__assigned_trips").order_by("-deployment_date", "-id")
+        queryset = Trip.objects.select_related("client", "indent", "vendor", "vehicle", "driver").prefetch_related("charges", "tds_entries", "indent_links__indent__assigned_trips").order_by("-deployment_date", "-id")
         if getattr(self.request.user, "role", "") == User.Role.TRANSPORTER:
             queryset = queryset.filter(vendor_id=self.request.user.vendor_id)
         for field in ("status", "vendor", "client"):
@@ -398,7 +398,8 @@ class TripViewSet(AuditedModelViewSet):
         serializer = self.get_serializer(trip, data=changes, partial=True)
         serializer.is_valid(raise_exception=True)
         old = {key: str(getattr(trip, f"{key}_id", getattr(trip, key, ""))) for key in changes}
-        trip = serializer.save(status=Trip.Status.READY)
+        next_status = Trip.Status.READY if trip.status in {Trip.Status.DRAFT, Trip.Status.READY, Trip.Status.ADVANCE_APPROVAL_PENDING, Trip.Status.ADVANCE_APPROVED} else trip.status
+        trip = serializer.save(status=next_status)
         approved_items = trip.approval_items.filter(item_status=PaymentApprovalItem.Status.APPROVED)
         batch_ids = list(approved_items.values_list("batch_id", flat=True))
         approved_items.update(item_status=PaymentApprovalItem.Status.SUPERSEDED)
@@ -454,6 +455,19 @@ class TripViewSet(AuditedModelViewSet):
         else:
             trip.status = Trip.Status.CANCELLED
         trip.save(update_fields=["status", "updated_at"])
+        # Undecided approval lines would otherwise block their batch forever, because
+        # decisions on cancelled trips are refused.
+        open_items = trip.approval_items.filter(
+            item_status=PaymentApprovalItem.Status.PENDING,
+            batch__status__in=["PENDING", "PARTIALLY_APPROVED"],
+        )
+        batch_ids = list(open_items.values_list("batch_id", flat=True))
+        open_items.update(item_status=PaymentApprovalItem.Status.SUPERSEDED, approver_note="Trip cancelled before a decision was recorded")
+        from approvals.models import PaymentApprovalBatch
+        from approvals.services import refresh_batch_status_from_items
+
+        for batch in PaymentApprovalBatch.objects.filter(pk__in=batch_ids):
+            refresh_batch_status_from_items(batch)
         record_audit(actor=request.user, action="TRIP_CANCELLED", instance=trip, after={"status": trip.status, "paid": str(paid)}, request_id=getattr(request, "request_id", ""))
         return Response(self.get_serializer(trip).data)
 
