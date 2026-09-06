@@ -1,8 +1,13 @@
 function errorMessages(data: unknown, field = ""): string[] {
   if (typeof data === "string") return data.trim() ? [field ? `${field.replaceAll("_", " ")}: ${data}` : data] : [];
   if (Array.isArray(data)) return data.flatMap((value) => errorMessages(value, field));
-  if (data && typeof data === "object") return Object.entries(data).flatMap(([key, value]) =>
-    errorMessages(value, ["detail", "non_field_errors", "__all__"].includes(key) ? field : field ? `${field}.${key}` : key));
+  if (data && typeof data === "object")
+    return Object.entries(data).flatMap(([key, value]) =>
+      errorMessages(
+        value,
+        ["detail", "non_field_errors", "__all__"].includes(key) ? field : field ? `${field}.${key}` : key,
+      ),
+    );
   return [];
 }
 
@@ -19,7 +24,12 @@ export class ApiError extends Error {
 
 function cookie(name: string) {
   if (typeof document === "undefined") return "";
-  return document.cookie.split("; ").find((entry) => entry.startsWith(`${name}=`))?.split("=")[1] ?? "";
+  return (
+    document.cookie
+      .split("; ")
+      .find((entry) => entry.startsWith(`${name}=`))
+      ?.split("=")[1] ?? ""
+  );
 }
 
 async function csrfToken() {
@@ -35,7 +45,8 @@ async function csrfToken() {
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const method = (init.method ?? "GET").toUpperCase();
   const headers = new Headers(init.headers);
-  if (!(init.body instanceof FormData) && init.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+  if (!(init.body instanceof FormData) && init.body && !headers.has("Content-Type"))
+    headers.set("Content-Type", "application/json");
   if (!["GET", "HEAD", "OPTIONS"].includes(method)) headers.set("X-CSRFToken", await csrfToken());
   const response = await fetch(path.startsWith("/api/") ? path : `/api${path}`, {
     ...init,
@@ -66,7 +77,9 @@ export async function apiAll<T>(path: string): Promise<T[]> {
 }
 
 export const money = (value: number | string | null | undefined) =>
-  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(Number(value ?? 0));
+  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 2 }).format(
+    Number(value ?? 0),
+  );
 
 export const dateText = (value?: string | null) => {
   if (!value) return "—";

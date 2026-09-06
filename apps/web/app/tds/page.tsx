@@ -21,29 +21,61 @@ type TDS = {
 };
 
 export default function TDSRegisterPage() {
-  const { filters, set, page, setPage, pageSize, query } = useRegisterFilters({ vendor: "", date_from: "", date_to: "" });
-  const vendors = useQuery({ queryKey: ["vendors", "filter"], queryFn: () => api<Paginated<Vendor>>("/vendors/?page_size=200") });
+  const { filters, set, page, setPage, pageSize, query } = useRegisterFilters({
+    vendor: "",
+    date_from: "",
+    date_to: "",
+  });
+  const vendors = useQuery({
+    queryKey: ["vendors", "filter"],
+    queryFn: () => api<Paginated<Vendor>>("/vendors/?page_size=200"),
+  });
   const entries = useQuery({ queryKey: ["tds", query], queryFn: () => api<Paginated<TDS>>(`/tds/?${query}`) });
   const rows = entries.data ? listResults(entries.data) : [];
   return (
     <>
-      <PageHeader title="TDS register" description="Transparent withholding by vendor, trip, payment, taxable base, rate and snapshotted policy." />
+      <PageHeader
+        title="TDS register"
+        description="Transparent withholding by vendor, trip, payment, taxable base, rate and snapshotted policy."
+      />
       <section className="panel">
         <div className="panel-body filters">
           <div className="field">
             <label htmlFor="tds-vendor">Transporter</label>
-            <select id="tds-vendor" className="input" value={filters.vendor} onChange={(e) => set("vendor", e.target.value)}>
+            <select
+              id="tds-vendor"
+              className="input"
+              value={filters.vendor}
+              onChange={(e) => set("vendor", e.target.value)}
+            >
               <option value="">All transporters</option>
-              {vendors.data && listResults(vendors.data).map((v) => <option key={v.id} value={v.id}>{v.display_name}</option>)}
+              {vendors.data &&
+                listResults(vendors.data).map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.display_name}
+                  </option>
+                ))}
             </select>
           </div>
           <div className="field">
             <label htmlFor="tds-from">From date</label>
-            <input id="tds-from" className="input" type="date" value={filters.date_from} onChange={(e) => set("date_from", e.target.value)} />
+            <input
+              id="tds-from"
+              className="input"
+              type="date"
+              value={filters.date_from}
+              onChange={(e) => set("date_from", e.target.value)}
+            />
           </div>
           <div className="field">
             <label htmlFor="tds-to">To date</label>
-            <input id="tds-to" className="input" type="date" value={filters.date_to} onChange={(e) => set("date_to", e.target.value)} />
+            <input
+              id="tds-to"
+              className="input"
+              type="date"
+              value={filters.date_to}
+              onChange={(e) => set("date_to", e.target.value)}
+            />
           </div>
         </div>
       </section>
@@ -73,15 +105,28 @@ export default function TDSRegisterPage() {
               <tbody>
                 {rows.map((row) => (
                   <tr key={row.id}>
-                    <td><DateText value={row.deduction_date} /></td>
+                    <td>
+                      <DateText value={row.deduction_date} />
+                    </td>
                     <td>{row.vendor_name}</td>
                     <td>{row.trip_no}</td>
-                    <td>{row.payment_no}<div className="muted">{row.finance_reference}</div></td>
+                    <td>
+                      {row.payment_no}
+                      <div className="muted">{row.finance_reference}</div>
+                    </td>
                     <td>{row.policy_snapshot.replaceAll("_", " ")}</td>
-                    <td className="money"><Money value={row.taxable_base} /></td>
+                    <td className="money">
+                      <Money value={row.taxable_base} />
+                    </td>
                     <td className="money">{row.rate}%</td>
-                    <td className="money"><strong><Money value={row.tds_amount} /></strong></td>
-                    <td><StatusBadge value={row.status} /></td>
+                    <td className="money">
+                      <strong>
+                        <Money value={row.tds_amount} />
+                      </strong>
+                    </td>
+                    <td>
+                      <StatusBadge value={row.status} />
+                    </td>
                   </tr>
                 ))}
               </tbody>

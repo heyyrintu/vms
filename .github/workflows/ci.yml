@@ -55,6 +55,8 @@ jobs:
         working-directory: apps/web
       - run: npm run lint
         working-directory: apps/web
+      - run: npm run format:check
+        working-directory: apps/web
       - run: npm run typecheck
         working-directory: apps/web
       - run: npm run build

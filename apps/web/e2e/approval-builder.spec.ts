@@ -2,8 +2,15 @@ import { expect, test, type Page } from "@playwright/test";
 import { ApiError } from "../lib/api";
 
 const trip = {
-  id: 1, trip_no: "TEST-001", deployment_date: "2026-09-05", origin: "Sonipat", destination: "Delhi",
-  vendor_name: "Test vendor", vehicle_no: "TEST123", vendor_freight_rate: "5000.00", advance_percent: "90.00",
+  id: 1,
+  trip_no: "TEST-001",
+  deployment_date: "2026-09-05",
+  origin: "Sonipat",
+  destination: "Delhi",
+  vendor_name: "Test vendor",
+  vehicle_no: "TEST123",
+  vendor_freight_rate: "5000.00",
+  advance_percent: "90.00",
   calculation: { gross_requested: "6000.00", tds_this_payment: "45.00", net_requested: "5955.00" },
 };
 
@@ -19,7 +26,9 @@ async function mockWorkspace(page: Page, activeApproval: unknown = null) {
 }
 
 test("API errors expose field, list and non-field validation messages", () => {
-  expect(new ApiError(400, { advance_percent: ["Enter a valid number."] }).message).toBe("advance percent: Enter a valid number.");
+  expect(new ApiError(400, { advance_percent: ["Enter a valid number."] }).message).toBe(
+    "advance percent: Enter a valid number.",
+  );
   expect(new ApiError(400, ["Financial fields are locked"]).message).toBe("Financial fields are locked");
   expect(new ApiError(400, { non_field_errors: ["Invalid combination"] }).message).toBe("Invalid combination");
   expect(new ApiError(400, { detail: "Not eligible" }).message).toBe("Not eligible");
@@ -54,7 +63,10 @@ test("changed field is patched and validation failure stops submission", async (
   let submissions = 0;
   await page.route("**/api/trips/1/", async (route) => {
     patch = route.request().postDataJSON();
-    await route.fulfill({ status: 400, json: { vendor_freight_rate: ["Ensure this value is greater than or equal to 0."] } });
+    await route.fulfill({
+      status: 400,
+      json: { vendor_freight_rate: ["Ensure this value is greater than or equal to 0."] },
+    });
   });
   await page.route("**/api/approval-batches/", async (route) => {
     submissions++;
@@ -80,10 +92,22 @@ test("existing draft offers a recovery link instead of an eligible checkbox", as
 test("requester can submit an existing draft from its detail page", async ({ page }) => {
   await mockWorkspace(page);
   const batch = {
-    id: 7, approval_no: "PA-TEST-007", client_name: "Test client", purpose: "ADVANCE",
-    revision_no: 1, status: "DRAFT", requested_by: 1, current_stage: 1,
-    gross_requested: "6000.00", tds_requested: "45.00", net_requested: "5955.00",
-    stage_decisions: [], approval_rule_snapshot: {}, revision_diff: [], items: [], actions: [],
+    id: 7,
+    approval_no: "PA-TEST-007",
+    client_name: "Test client",
+    purpose: "ADVANCE",
+    revision_no: 1,
+    status: "DRAFT",
+    requested_by: 1,
+    current_stage: 1,
+    gross_requested: "6000.00",
+    tds_requested: "45.00",
+    net_requested: "5955.00",
+    stage_decisions: [],
+    approval_rule_snapshot: {},
+    revision_diff: [],
+    items: [],
+    actions: [],
   };
   await page.route("**/api/approval-batches/7/", (route) => route.fulfill({ json: batch }));
   let submissions = 0;

@@ -13,13 +13,31 @@ async function loginAs(page: import("@playwright/test").Page, username: string) 
   await expect(page.getByRole("heading", { name: "Operations overview" })).toBeVisible();
 }
 
-async function apiCall<T>(page: import("@playwright/test").Page, path: string, method = "GET", body?: unknown): Promise<T> {
-  const result = await page.evaluate(async ({ path, method, body }) => {
-    const csrf = decodeURIComponent(document.cookie.split("; ").find((part) => part.startsWith("csrftoken="))?.split("=")[1] ?? "");
-    const response = await fetch(path, { method, credentials: "include", headers: { "Content-Type": "application/json", ...(csrf ? { "X-CSRFToken": csrf } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) });
-    const data = await response.json().catch(() => ({}));
-    return { ok: response.ok, status: response.status, data };
-  }, { path, method, body });
+async function apiCall<T>(
+  page: import("@playwright/test").Page,
+  path: string,
+  method = "GET",
+  body?: unknown,
+): Promise<T> {
+  const result = await page.evaluate(
+    async ({ path, method, body }) => {
+      const csrf = decodeURIComponent(
+        document.cookie
+          .split("; ")
+          .find((part) => part.startsWith("csrftoken="))
+          ?.split("=")[1] ?? "",
+      );
+      const response = await fetch(path, {
+        method,
+        credentials: "include",
+        headers: { "Content-Type": "application/json", ...(csrf ? { "X-CSRFToken": csrf } : {}) },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+      const data = await response.json().catch(() => ({}));
+      return { ok: response.ok, status: response.status, data };
+    },
+    { path, method, body },
+  );
   expect(result.ok, JSON.stringify(result.data)).toBeTruthy();
   return result.data as T;
 }
@@ -142,26 +160,91 @@ test("administrator can search and upload MIS history", async ({ page }) => {
 test("trip approval and partial finance payment complete across roles", async ({ page }) => {
   const suffix = Date.now().toString().slice(-8);
   await loginAs(page, "operations");
-  const client = await apiCall<{ id: number }>(page, "/api/clients/", "POST", { code: `E2E${suffix}`, name: `E2E Client ${suffix}`, default_branch: "Sonipat", active: true });
-  const vendor = await apiCall<{ id: number }>(page, "/api/vendors/", "POST", { vendor_code: `E2EV${suffix}`, legal_name: `E2E Vendor ${suffix} Pvt Ltd`, display_name: `E2E Vendor ${suffix}`, status: "ACTIVE" });
-  const vehicle = await apiCall<{ id: number }>(page, "/api/vehicles/", "POST", { registration_no: `HR10E${suffix}`, vendor: vendor.id, vehicle_type: "32 FT MXL", capacity: "25000" });
-  const driver = await apiCall<{ id: number }>(page, "/api/drivers/", "POST", { name: `E2E Driver ${suffix}`, phone: `9199${suffix}`, vendor: vendor.id });
+  const client = await apiCall<{ id: number }>(page, "/api/clients/", "POST", {
+    code: `E2E${suffix}`,
+    name: `E2E Client ${suffix}`,
+    default_branch: "Sonipat",
+    active: true,
+  });
+  const vendor = await apiCall<{ id: number }>(page, "/api/vendors/", "POST", {
+    vendor_code: `E2EV${suffix}`,
+    legal_name: `E2E Vendor ${suffix} Pvt Ltd`,
+    display_name: `E2E Vendor ${suffix}`,
+    status: "ACTIVE",
+  });
+  const vehicle = await apiCall<{ id: number }>(page, "/api/vehicles/", "POST", {
+    registration_no: `HR10E${suffix}`,
+    vendor: vendor.id,
+    vehicle_type: "32 FT MXL",
+    capacity: "25000",
+  });
+  const driver = await apiCall<{ id: number }>(page, "/api/drivers/", "POST", {
+    name: `E2E Driver ${suffix}`,
+    phone: `9199${suffix}`,
+    vendor: vendor.id,
+  });
   const today = new Date().toISOString().slice(0, 10);
-  const indent = await apiCall<{ id: number }>(page, "/api/indents/", "POST", { client: client.id, indent_no: `E2E-IND-${suffix}`, challan_no: `E2E-IND-${suffix}`, indent_date: today, origin: "Sonipat", destination: "Delhi", branch: "Sonipat", status: "OPEN" });
-  const trip = await apiCall<{ id: number }>(page, "/api/trips/", "POST", { indent: indent.id, indent_ids: [indent.id], client: client.id, origin: "Sonipat", destination: "Delhi", deployment_date: today, vendor: vendor.id, vehicle: vehicle.id, driver: driver.id, vendor_freight_rate: "50000.00", advance_percent: "90.00", branch: "Sonipat" });
-  const batch = await apiCall<{ id: number }>(page, "/api/approval-batches/", "POST", { trip_ids: [trip.id], purpose: "ADVANCE" });
+  const indent = await apiCall<{ id: number }>(page, "/api/indents/", "POST", {
+    client: client.id,
+    indent_no: `E2E-IND-${suffix}`,
+    challan_no: `E2E-IND-${suffix}`,
+    indent_date: today,
+    origin: "Sonipat",
+    destination: "Delhi",
+    branch: "Sonipat",
+    status: "OPEN",
+  });
+  const trip = await apiCall<{ id: number }>(page, "/api/trips/", "POST", {
+    indent: indent.id,
+    indent_ids: [indent.id],
+    client: client.id,
+    origin: "Sonipat",
+    destination: "Delhi",
+    deployment_date: today,
+    vendor: vendor.id,
+    vehicle: vehicle.id,
+    driver: driver.id,
+    vendor_freight_rate: "50000.00",
+    advance_percent: "90.00",
+    branch: "Sonipat",
+  });
+  const batch = await apiCall<{ id: number }>(page, "/api/approval-batches/", "POST", {
+    trip_ids: [trip.id],
+    purpose: "ADVANCE",
+  });
   await apiCall(page, `/api/approval-batches/${batch.id}/submit/`, "POST", {});
 
   await loginAs(page, "approver");
-  const approved = await apiCall<{ status: string }>(page, `/api/approval-batches/${batch.id}/decide/`, "POST", { decision: "APPROVE", comment: "E2E approval" });
+  const approved = await apiCall<{ status: string }>(page, `/api/approval-batches/${batch.id}/decide/`, "POST", {
+    decision: "APPROVE",
+    comment: "E2E approval",
+  });
   expect(approved.status).toBe("APPROVED");
 
   await loginAs(page, "finance");
-  const pending = await apiCall<Array<{ vendor_id: number; items: Array<{ approval_item_id: number; trip_id: number; remaining_tds: string; remaining_net: string }> }>>(page, "/api/finance/pending/");
+  const pending = await apiCall<
+    Array<{
+      vendor_id: number;
+      items: Array<{ approval_item_id: number; trip_id: number; remaining_tds: string; remaining_net: string }>;
+    }>
+  >(page, "/api/finance/pending/");
   const line = pending.find((group) => group.vendor_id === vendor.id)!.items.find((item) => item.trip_id === trip.id)!;
   const tds = (Number(line.remaining_tds) / 2).toFixed(2);
   const net = (Number(line.remaining_net) / 2).toFixed(2);
-  await apiCall(page, "/api/payments/", "POST", { vendor: vendor.id, payment_date: today, payment_mode: "BANK_TRANSFER", utr_reference: `E2E-UTR-${suffix}`, allocations: [{ approval_item_id: line.approval_item_id, gross_amount_allocated: (Number(tds) + Number(net)).toFixed(2), tds_allocated: tds, net_cash_allocated: net }] });
+  await apiCall(page, "/api/payments/", "POST", {
+    vendor: vendor.id,
+    payment_date: today,
+    payment_mode: "BANK_TRANSFER",
+    utr_reference: `E2E-UTR-${suffix}`,
+    allocations: [
+      {
+        approval_item_id: line.approval_item_id,
+        gross_amount_allocated: (Number(tds) + Number(net)).toFixed(2),
+        tds_allocated: tds,
+        net_cash_allocated: net,
+      },
+    ],
+  });
   const ledger = await apiCall<{ cash_paid: string; remaining_to_pay: string }>(page, `/api/trip-ledger/${trip.id}/`);
   expect(Number(ledger.cash_paid)).toBeGreaterThan(0);
   expect(Number(ledger.remaining_to_pay)).toBeGreaterThan(0);
