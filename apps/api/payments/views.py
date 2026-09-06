@@ -297,6 +297,13 @@ class TDSEntryViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = TDSEntry.objects.select_related("vendor", "trip", "payment").order_by("-deduction_date", "-id")
         if getattr(self.request.user, "role", "") == User.Role.TRANSPORTER:
             queryset = queryset.filter(vendor_id=self.request.user.vendor_id)
+        params = self.request.query_params
+        if params.get("vendor"):
+            queryset = queryset.filter(vendor_id=params["vendor"])
+        if params.get("date_from"):
+            queryset = queryset.filter(deduction_date__gte=params["date_from"])
+        if params.get("date_to"):
+            queryset = queryset.filter(deduction_date__lte=params["date_to"])
         return queryset
 
 
