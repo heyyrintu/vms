@@ -21,6 +21,7 @@ from accounts.views import (
 from approvals.views import ApprovalBatchViewSet, ApprovalRuleViewSet, CommentViewSet
 from audit.views import AuditLogViewSet
 from core.views import (
+    ChoicesView,
     GlobalSearchView,
     HealthView,
     PermissionMatrixView,
@@ -115,6 +116,7 @@ urlpatterns = [
     path("api/auth/mfa/confirm/", MFAConfirmView.as_view()),
     path("api/auth/mfa/disable/", MFADisableView.as_view()),
     path("api/settings/", SettingsView.as_view()),
+    path("api/choices/", ChoicesView.as_view()),
     path("api/permission-matrix/", PermissionMatrixView.as_view()),
     path("api/search/", GlobalSearchView.as_view()),
     path("api/dashboard/", DashboardView.as_view()),

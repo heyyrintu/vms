@@ -92,3 +92,22 @@ class GlobalSearchView(APIView):
             for driver in Driver.objects.filter(Q(name__icontains=term) | Q(phone__icontains=term))[:10]:
                 results.append({"type": "driver", "id": driver.pk, "label": driver.name, "detail": driver.phone})
         return Response({"results": results[:30]})
+
+
+class ChoicesView(APIView):
+    @extend_schema(responses=dict)
+    def get(self, request):
+        from operations.models import Document, Trip
+        from payments.models import ClientBilling, FinancePaymentTransaction
+
+        def rows(choices):
+            return [{"value": value, "label": label} for value, label in choices]
+
+        return Response(
+            {
+                "trip_status": rows(Trip.Status.choices),
+                "document_kind": rows(Document.Kind.choices),
+                "billing_status": rows(ClientBilling.Status.choices),
+                "payment_status": rows(FinancePaymentTransaction.Status.choices),
+            }
+        )

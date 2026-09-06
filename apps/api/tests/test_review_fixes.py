@@ -141,3 +141,37 @@ def test_email_reply_from_unknown_sender_stays_unmapped_even_with_approval_refer
     )
     assert inbound.object_type == "unmapped"
     assert not Comment.objects.filter(object_type="approval", object_id=str(batch.pk)).exists()
+
+
+@pytest.mark.django_db
+def test_resolving_an_unmapped_message_requires_an_existing_object(users):
+    from integrations.models import IntegrationMessage, UnmappedInboundMessage
+
+    message = IntegrationMessage.objects.create(
+        idempotency_key="email-inbound:orphan", channel="EMAIL", direction="INBOUND",
+        object_type="unmapped", object_id="", recipient="x@example.test", subject="hi", body_summary="hi", status="RECEIVED",
+    )
+    item = UnmappedInboundMessage.objects.create(message=message, reason="test")
+    response = client_for(users[User.Role.ADMIN]).post(
+        f"/api/unmapped-messages/{item.pk}/resolve/", {"object_type": "trip", "object_id": "999999"}, format="json"
+    )
+    assert response.status_code == 400
+    assert not Comment.objects.filter(object_type="trip", object_id="999999").exists()
+
+
+def test_whatsapp_provider_refuses_free_form_messages_without_a_template(monkeypatch):
+    from integrations.providers import WhatsAppProvider
+
+    monkeypatch.delenv("WHATSAPP_TEMPLATE_NAME", raising=False)
+    provider = WhatsAppProvider(access_token="token", phone_number_id="123")
+    with pytest.raises(RuntimeError, match="template"):
+        provider.send(recipient="919876543210", subject="x", body="hello", idempotency_key="k")
+
+
+@pytest.mark.django_db
+def test_choices_endpoint_lists_backend_enums(users):
+    response = client_for(users[User.Role.OPERATIONS]).get("/api/choices/")
+    assert response.status_code == 200
+    values = [row["value"] for row in response.data["trip_status"]]
+    assert "SETTLEMENT_APPROVAL_PENDING" in values
+    assert any(row["value"] == "POD" for row in response.data["document_kind"])
