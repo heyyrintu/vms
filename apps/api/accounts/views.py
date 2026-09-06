@@ -1,5 +1,11 @@
 from django.conf import settings
-from django.contrib.auth import authenticate, login, logout, password_validation
+from django.contrib.auth import (
+    authenticate,
+    login,
+    logout,
+    password_validation,
+    update_session_auth_hash,
+)
 from django.contrib.auth.tokens import default_token_generator
 from django.middleware.csrf import get_token
 from django.utils.decorators import method_decorator
@@ -103,7 +109,8 @@ class PasswordChangeView(APIView):
         password_validation.validate_password(password, request.user)
         request.user.set_password(password)
         request.user.save(update_fields=["password"])
-        login(request, request.user)
+        # Keeps this session valid while every other session's auth hash goes stale.
+        update_session_auth_hash(request, request.user)
         return Response({"status": "password_changed"})
 
 
