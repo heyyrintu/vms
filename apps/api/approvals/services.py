@@ -160,7 +160,7 @@ def create_approval_batch(*, actor, trips, purpose="ADVANCE", request_id=""):
     trip_ids = [t.pk if hasattr(t, "pk") else t for t in trips]
     if len(trip_ids) != len(set(trip_ids)):
         raise ValueError("Each trip may be selected only once")
-    trips = list(Trip.objects.select_for_update().select_related("client", "vendor").filter(pk__in=trip_ids))
+    trips = list(Trip.objects.select_for_update().select_related("client", "vendor").filter(pk__in=trip_ids).order_by("pk"))
     if len(trips) != len(trip_ids):
         raise ValueError("One or more selected trips no longer exist. Refresh the trip list.")
     if not trips:

@@ -127,3 +127,17 @@ def test_document_links_are_relative_for_the_web_proxy(trip_factory, users):
     assert upload.status_code == 201, upload.data
     assert upload.data["download_url"].startswith("/api/documents/"), upload.data["download_url"]
     assert timezone.now()  # keeps the import used for future date assertions
+
+
+@pytest.mark.django_db
+def test_email_reply_from_unknown_sender_stays_unmapped_even_with_approval_reference(trip_factory, users):
+    batch = approval(trip_factory(), users, approve=False)
+    inbound = ingest_email_reply(
+        external_message_id="spoof-1",
+        external_thread_id="",
+        subject=f"Re: [{batch.approval_no}] Please approve",
+        body="I am not a vendor contact",
+        sender="attacker@example.test",
+    )
+    assert inbound.object_type == "unmapped"
+    assert not Comment.objects.filter(object_type="approval", object_id=str(batch.pk)).exists()

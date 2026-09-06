@@ -6,8 +6,11 @@ from .services import deliver_message
 
 
 @shared_task(autoretry_for=(Exception,), retry_backoff=True, max_retries=5)
-def deliver_message_task(message_id):
-    return deliver_message(message_id).pk
+def deliver_message_task(message_id, actor_id=None):
+    from accounts.models import User
+
+    actor = User.objects.filter(pk=actor_id).first() if actor_id else None
+    return deliver_message(message_id, actor=actor).pk
 
 
 @shared_task

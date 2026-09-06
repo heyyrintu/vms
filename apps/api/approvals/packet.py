@@ -69,7 +69,8 @@ def build_approval_packet_pdf(batch):
         canvas.restoreState()
 
     story = []
-    candidates = (Path(settings.BASE_DIR) / "drona-logo.png", Path(settings.BASE_DIR).parents[1] / "drona-logo.png")
+    base_dir = Path(settings.BASE_DIR)
+    candidates = (base_dir / "drona-logo.png", base_dir.parent.parent / "drona-logo.png")
     logo_path = next((path for path in candidates if path.exists()), None)
     if logo_path:
         logo = Image(str(logo_path), width=49 * mm, height=14 * mm)

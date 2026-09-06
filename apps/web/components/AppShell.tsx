@@ -11,6 +11,8 @@ import { BrandLogo } from "@/components/BrandLogo";
 
 type NavLink = { label: string; href: string; icon: string; roles?: string[] };
 
+const MOBILE_LABELS: Record<string, string> = { "/": "Home", "/trips": "Trips", "/approvals": "Approvals", "/finance": "Finance" };
+
 const INTERNAL = ["OPERATIONS", "APPROVER", "FINANCE", "MANAGEMENT", "ADMIN"];
 const FINANCE_VIEW = ["FINANCE", "MANAGEMENT", "ADMIN"];
 const OPERATIONS_WRITE = ["OPERATIONS", "ADMIN"];
@@ -87,7 +89,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <header className="topbar"><GlobalSearch /><div className="user-pill"><div className="avatar">{initials}</div><div><strong>{me.data?.first_name || me.data?.username}</strong><br /><small>{me.data?.role}</small></div><button className="button small" onClick={logout}>Sign out</button></div></header>
         <div className="content">{logoutError && <div className="notice error" role="alert">{logoutError}</div>}{children}</div>
       </main>
-      <nav className="mobile-nav"><Link href="/">Home</Link><Link href="/trips">Trips</Link><Link href="/approvals">Approvals</Link><Link href="/finance">Finance</Link></nav>
+      <nav className="mobile-nav">{visibleGroups.flatMap((group) => group.links).filter((link) => link.href in MOBILE_LABELS).map((link) => <Link href={link.href} key={link.href}>{MOBILE_LABELS[link.href]}</Link>)}</nav>
     </div>
   );
 }

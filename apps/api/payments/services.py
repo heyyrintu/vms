@@ -274,12 +274,12 @@ def reverse_payment(*, actor, payment, reason, request_id=""):
     payment = FinancePaymentTransaction.objects.select_for_update().get(pk=payment.pk)
     if payment.status != payment.Status.PAID:
         raise ValueError("Only paid transactions can be reversed")
-    if Trip.objects.filter(pk__in=payment.allocations.values("trip_id"), status=Trip.Status.SETTLED).exists():
-        raise ValueError("Payments on settled trips cannot be reversed. Reopen the settlement first.")
     allocations = list(payment.allocations.select_related("approval_item", "trip").order_by("trip_id", "id"))
     locked_trips = {trip.pk: trip for trip in Trip.objects.select_for_update().filter(
         pk__in=[allocation.trip_id for allocation in allocations]
     ).order_by("pk")}
+    if any(trip.status == Trip.Status.SETTLED for trip in locked_trips.values()):
+        raise ValueError("Payments on settled trips cannot be reversed. Reopen the settlement first.")
     payment.status = payment.Status.REVERSED
     payment.reversal_reason = reason
     payment.save(update_fields=["status", "reversal_reason", "updated_at"])

@@ -114,9 +114,14 @@ class ApprovalBatchSerializer(serializers.ModelSerializer):
             return cache[obj.pk]
         request = self.context.get("request")
         vendor_id = request.user.vendor_id if request and request.user.role == "TRANSPORTER" else None
+        items = (
+            obj.items.all()
+            if "items" in getattr(obj, "_prefetched_objects_cache", {})
+            else obj.items.select_related("trip", "vendor").all()
+        )
         rows = [
             item
-            for item in obj.items.all()
+            for item in items
             if item.item_status != PaymentApprovalItem.Status.SUPERSEDED
             and (vendor_id is None or item.vendor_id == vendor_id)
         ]
