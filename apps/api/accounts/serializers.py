@@ -69,3 +69,17 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 class OTPSerializer(serializers.Serializer):
     otp = serializers.CharField(min_length=6, max_length=6)
     password = serializers.CharField(required=False, write_only=True)
+
+
+class OtpRequestSerializer(serializers.Serializer):
+    identifier = serializers.CharField(max_length=180)
+    purpose = serializers.ChoiceField(choices=["LOGIN", "PASSWORD_RESET"])
+
+
+class OtpVerifySerializer(serializers.Serializer):
+    challenge_id = serializers.CharField(max_length=64)
+    # `code` is the six digits delivered over WhatsApp or email. `otp` is the
+    # TOTP authenticator code, named to match LoginSerializer. Both may appear.
+    code = serializers.CharField(min_length=6, max_length=6)
+    purpose = serializers.ChoiceField(choices=["LOGIN", "PASSWORD_RESET"], default="LOGIN")
+    otp = serializers.CharField(required=False, allow_blank=True, write_only=True)

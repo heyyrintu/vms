@@ -111,6 +111,8 @@ REST_FRAMEWORK = {
         "login": os.getenv("LOGIN_THROTTLE_RATE", "10/minute"),
         "password_reset": "5/hour",
         "webhook": "300/minute",
+        "otp_request": os.getenv("OTP_REQUEST_THROTTLE_RATE", "5/hour"),
+        "otp_verify": os.getenv("OTP_VERIFY_THROTTLE_RATE", "20/hour"),
     },
 }
 SPECTACULAR_SETTINGS = {

@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.contrib.auth import (
     authenticate,
@@ -7,6 +9,7 @@ from django.contrib.auth import (
     update_session_auth_hash,
 )
 from django.contrib.auth.tokens import default_token_generator
+from django.core.signing import TimestampSigner
 from django.middleware.csrf import get_token
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_bytes, force_str
@@ -18,13 +21,17 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from audit.models import record_audit
 from core.crypto import decrypt_value, encrypt_value
 
+from . import otp as otp_service
 from .mfa import generate_secret, provisioning_uri, verify_code
-from .models import User
+from .models import OtpChallenge, User
 from .serializers import (
     LoginSerializer,
+    OtpRequestSerializer,
     OTPSerializer,
+    OtpVerifySerializer,
     PasswordChangeSerializer,
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
@@ -218,3 +225,84 @@ class MFADisableView(APIView):
         request.user.mfa_secret_encrypted = ""
         request.user.save(update_fields=["mfa_enabled", "mfa_secret_encrypted"])
         return Response({"status": "mfa_disabled"})
+
+
+class OtpRequestView(APIView):
+    permission_classes = [AllowAny]
+    throttle_scope = "otp_request"
+
+    @extend_schema(request=OtpRequestSerializer, responses=dict)
+    def post(self, request):
+        serializer = OtpRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        identifier = serializer.validated_data["identifier"].strip()
+        purpose = serializer.validated_data["purpose"]
+        user, channel = otp_service.resolve_identifier(identifier)
+        expires_in = int(otp_service.CODE_TTL.total_seconds())
+        if user is None or (channel == OtpChallenge.Channel.EMAIL and not user.email):
+            # Answer unknown identifiers with the same shape so the endpoint
+            # cannot be used to discover which accounts exist.
+            return Response({
+                "challenge_id": str(uuid.uuid4()),
+                "channel": channel,
+                "destination_masked": otp_service.mask_destination(identifier),
+                "expires_in": expires_in,
+            })
+        try:
+            challenge, code = otp_service.issue_challenge(
+                user, purpose=purpose, channel=channel, request=request
+            )
+        except otp_service.OtpRateLimited:
+            return Response({"detail": "Too many code requests. Try again shortly."}, status=429)
+        otp_service.send_challenge(challenge, code)
+        record_audit(actor=request.user, action="OTP_ISSUED", instance=challenge,
+                     after={"purpose": purpose, "channel": channel})
+        return Response({
+            "challenge_id": str(challenge.id),
+            "channel": challenge.channel,
+            "destination_masked": challenge.destination_masked,
+            "expires_in": expires_in,
+        })
+
+
+class OtpVerifyView(APIView):
+    permission_classes = [AllowAny]
+    throttle_scope = "otp_verify"
+
+    @extend_schema(request=OtpVerifySerializer, responses=dict)
+    def post(self, request):
+        serializer = OtpVerifySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        purpose = serializer.validated_data["purpose"]
+        try:
+            challenge = otp_service.verify_challenge(
+                serializer.validated_data["challenge_id"],
+                serializer.validated_data["code"],
+                purpose=purpose,
+            )
+        except otp_service.OtpInvalid:
+            return Response({"detail": "Invalid or expired code"}, status=400)
+
+        user = challenge.user
+        if purpose == OtpChallenge.Purpose.PASSWORD_RESET:
+            otp_service.consume(challenge)
+            record_audit(actor=None, action="OTP_VERIFIED", instance=challenge)
+            ticket = TimestampSigner().sign_object(
+                {"user": user.pk, "challenge": str(challenge.id)}
+            )
+            return Response({"reset_ticket": ticket})
+
+        if user.mfa_enabled and not verify_code(
+            decrypt_value(user.mfa_secret_encrypted), serializer.validated_data.get("otp", "")
+        ):
+            # Keep the challenge alive so the user can retry with their
+            # authenticator, but count the try so it cannot be ground down.
+            otp_service.register_failed_attempt(challenge)
+            return Response(
+                {"detail": "A valid authenticator code is required", "mfa_required": True},
+                status=400,
+            )
+        otp_service.consume(challenge)
+        login(request, user)
+        record_audit(actor=user, action="OTP_LOGIN", instance=challenge)
+        return Response(UserSerializer(user).data)
