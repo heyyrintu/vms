@@ -1,6 +1,5 @@
 import uuid
 
-from django.conf import settings
 from django.contrib.auth import (
     authenticate,
     login,
@@ -8,12 +7,10 @@ from django.contrib.auth import (
     password_validation,
     update_session_auth_hash,
 )
-from django.contrib.auth.tokens import default_token_generator
-from django.core.signing import TimestampSigner
+from django.core.exceptions import ValidationError
+from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 from django.middleware.csrf import get_token
 from django.utils.decorators import method_decorator
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.views.decorators.csrf import ensure_csrf_cookie
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
@@ -34,7 +31,6 @@ from .serializers import (
     OtpVerifySerializer,
     PasswordChangeSerializer,
     PasswordResetConfirmSerializer,
-    PasswordResetRequestSerializer,
     UserSerializer,
 )
 
@@ -121,36 +117,6 @@ class PasswordChangeView(APIView):
         return Response({"status": "password_changed"})
 
 
-class PasswordResetRequestView(APIView):
-    permission_classes = [AllowAny]
-    throttle_scope = "password_reset"
-
-    @extend_schema(request=PasswordResetRequestSerializer, responses=dict)
-    def post(self, request):
-        serializer = PasswordResetRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = User.objects.filter(email__iexact=serializer.validated_data["email"], is_active=True).first()
-        if user:
-            from integrations.services import queue_message
-
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            token = default_token_generator.make_token(user)
-            base_url = settings.WEB_ORIGIN
-            reset_url = f"{base_url}/login?reset_uid={uid}&reset_token={token}"
-            queue_message(
-                channel="EMAIL",
-                recipient=user.email,
-                subject="Reset your Drona Logitech password",
-                body=f"Use this secure link to reset your password: {reset_url}",
-                object_type="account",
-                object_id=str(user.pk),
-                idempotency_key=f"password-reset:{user.pk}:{token[-8:]}",
-                user=user,
-                event_key="PASSWORD_RESET",
-            )
-        return Response({"status": "If the account exists, reset instructions have been queued."})
-
-
 class PasswordResetConfirmView(APIView):
     permission_classes = [AllowAny]
     throttle_scope = "password_reset"
@@ -160,15 +126,34 @@ class PasswordResetConfirmView(APIView):
         serializer = PasswordResetConfirmSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
-            user = User.objects.get(pk=force_str(urlsafe_base64_decode(serializer.validated_data["uid"])))
-        except (User.DoesNotExist, ValueError, TypeError, OverflowError):
-            user = None
-        if not user or not default_token_generator.check_token(user, serializer.validated_data["token"]):
-            return Response({"detail": "Reset link is invalid or expired"}, status=400)
+            payload = TimestampSigner().unsign_object(
+                serializer.validated_data["reset_ticket"],
+                max_age=otp_service.RESET_TICKET_MAX_AGE,
+            )
+        except (BadSignature, SignatureExpired):
+            return Response({"detail": "Reset request is invalid or expired"}, status=400)
+        try:
+            # A non-UUID challenge id makes the filter raise rather than miss.
+            challenge = (
+                OtpChallenge.objects.filter(
+                    pk=payload.get("challenge"),
+                    user_id=payload.get("user"),
+                    purpose=OtpChallenge.Purpose.PASSWORD_RESET,
+                    consumed_at__isnull=False,
+                )
+                .select_related("user")
+                .first()
+            )
+        except (ValidationError, ValueError, TypeError):
+            challenge = None
+        if challenge is None:
+            return Response({"detail": "Reset request is invalid or expired"}, status=400)
+        user = challenge.user
         password = serializer.validated_data["new_password"]
         password_validation.validate_password(password, user)
         user.set_password(password)
         user.save(update_fields=["password"])
+        record_audit(actor=None, action="PASSWORD_RESET", instance=challenge)
         return Response({"status": "password_reset"})
 
 
