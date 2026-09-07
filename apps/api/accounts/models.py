@@ -3,6 +3,8 @@ import re
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Q, UniqueConstraint
+from django.db.models.functions import Lower
 
 
 class User(AbstractUser):
@@ -13,6 +15,20 @@ class User(AbstractUser):
         MANAGEMENT = "MANAGEMENT", "Management"
         TRANSPORTER = "TRANSPORTER", "Transporter"
         ADMIN = "ADMIN", "Admin"
+
+    class Meta(AbstractUser.Meta):
+        constraints = [
+            UniqueConstraint(
+                Lower("email"),
+                condition=~Q(email=""),
+                name="accounts_user_unique_email_ci",
+            ),
+            UniqueConstraint(
+                fields=["whatsapp_phone"],
+                condition=~Q(whatsapp_phone=""),
+                name="accounts_user_unique_whatsapp_phone",
+            ),
+        ]
 
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.OPERATIONS)
     vendor = models.ForeignKey(
