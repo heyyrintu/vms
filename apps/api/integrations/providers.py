@@ -223,6 +223,23 @@ class WhatsAppProvider(MessageProvider):
                     "index": str(index),
                     "parameters": [{"type": "text", "text": str(value)[:2000]}],
                 })
+            otp_button_type = str(options.get("otp_button_type") or "none").lower()
+            if otp_button_type == "copy_code":
+                components.append({
+                    "type": "button",
+                    "sub_type": "copy_code",
+                    "index": "0",
+                    "parameters": [
+                        {"type": "coupon_code", "coupon_code": str(options.get("otp_button_code", ""))}
+                    ],
+                })
+            elif otp_button_type == "url":
+                components.append({
+                    "type": "button",
+                    "sub_type": "url",
+                    "index": "0",
+                    "parameters": [{"type": "text", "text": str(options.get("otp_button_code", ""))}],
+                })
             content = {
                 "messaging_product": "whatsapp",
                 "to": recipient,

@@ -125,6 +125,7 @@ def queue_message(
     event_key="",
     actor=None,
     provider_options=None,
+    summary=None,
 ):
     message, created = IntegrationMessage.objects.get_or_create(
         idempotency_key=idempotency_key,
@@ -133,7 +134,7 @@ def queue_message(
             "direction": "OUTBOUND",
             "recipient": recipient,
             "subject": subject[:240],
-            "body_summary": body[:1000],
+            "body_summary": (summary if summary is not None else body)[:1000],
             "payload_encrypted": encrypt_value(json.dumps({
                 "subject": subject,
                 "body": body,
