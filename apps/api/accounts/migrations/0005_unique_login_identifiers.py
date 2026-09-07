@@ -10,7 +10,7 @@ def reject_duplicate_identifiers(apps, schema_editor):
     problems = []
     for field, key in (("email", lambda value: value.lower()), ("whatsapp_phone", lambda value: value)):
         buckets = defaultdict(list)
-        for username, value in User.objects.filter(is_active=True).values_list("username", field):
+        for username, value in User.objects.values_list("username", field):
             if value:
                 buckets[key(value)].append(username)
         problems.extend(

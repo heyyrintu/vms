@@ -8,8 +8,11 @@ from accounts.models import User
 def find_conflicts(rows):
     """Return [(field, value, sorted usernames)] for identifiers shared by more than one row.
 
-    `rows` is an iterable of (username, email, whatsapp_phone). Taking rows as
-    an argument rather than querying inside keeps the logic testable after the
+    `rows` is an iterable of (username, email, whatsapp_phone) drawn from every
+    user row, active or not — the unique constraints this command guards apply
+    to all rows regardless of is_active, so scanning only active users would
+    let a conflict involving an inactive user go unreported. Taking rows as an
+    argument rather than querying inside keeps the logic testable after the
     unique constraints make a conflicting database unreachable.
     """
     groups = {"email": defaultdict(list), "whatsapp_phone": defaultdict(list)}
@@ -27,13 +30,11 @@ def find_conflicts(rows):
 
 
 class Command(BaseCommand):
-    help = "Report active users that share an email address or WhatsApp number"
+    help = "Report users (active or not) that share an email address or WhatsApp number"
 
     def handle(self, *args, **options):
         conflicts = find_conflicts(
-            User.objects.filter(is_active=True)
-            .order_by("username")
-            .values_list("username", "email", "whatsapp_phone")
+            User.objects.order_by("username").values_list("username", "email", "whatsapp_phone")
         )
         if not conflicts:
             self.stdout.write(self.style.SUCCESS("No duplicate login identifiers"))
