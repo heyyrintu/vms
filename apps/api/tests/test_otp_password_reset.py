@@ -83,6 +83,8 @@ def test_ticket_for_an_unconsumed_challenge_is_rejected(member, settings):
         format="json",
     )
     assert response.status_code == 400
+    member.refresh_from_db()
+    assert member.check_password("StrongPass123!")
 
 
 @pytest.mark.django_db
