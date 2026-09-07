@@ -284,6 +284,13 @@ class OtpVerifyView(APIView):
             return Response({"detail": "Invalid or expired code"}, status=400)
 
         user = challenge.user
+        if not user.is_active:
+            # Deactivation can race a valid, unexpired code. Reject exactly
+            # like a wrong/expired code so this endpoint never signals
+            # account status, and leave the challenge for natural expiry
+            # rather than consuming it.
+            return Response({"detail": "Invalid or expired code"}, status=400)
+
         if purpose == OtpChallenge.Purpose.PASSWORD_RESET:
             otp_service.consume(challenge)
             record_audit(actor=None, action="OTP_VERIFIED", instance=challenge)

@@ -64,6 +64,56 @@ def _code_for(challenge):
 
 
 @pytest.mark.django_db
+def test_login_verify_rejects_a_deactivated_user(member, settings):
+    settings.INTEGRATION_DELIVERY_MODE = "async"
+    client = APIClient()
+    response = request_code(client, "member@drona.test")
+    assert response.status_code == 200
+
+    challenge = OtpChallenge.objects.get(user=member)
+    code = _code_for(challenge)
+
+    member.is_active = False
+    member.save(update_fields=["is_active"])
+
+    verify = client.post(
+        "/api/auth/otp/verify/",
+        {"challenge_id": response.data["challenge_id"], "code": code},
+        format="json",
+    )
+    assert verify.status_code == 400
+    assert verify.data["detail"] == "Invalid or expired code"
+    assert client.get("/api/auth/me/").status_code != 200
+
+
+@pytest.mark.django_db
+def test_password_reset_verify_rejects_a_deactivated_user(member, settings):
+    settings.INTEGRATION_DELIVERY_MODE = "async"
+    client = APIClient()
+    response = request_code(client, "member@drona.test", purpose="PASSWORD_RESET")
+    assert response.status_code == 200
+
+    challenge = OtpChallenge.objects.get(user=member)
+    code = _code_for(challenge)
+
+    member.is_active = False
+    member.save(update_fields=["is_active"])
+
+    verify = client.post(
+        "/api/auth/otp/verify/",
+        {
+            "challenge_id": response.data["challenge_id"],
+            "code": code,
+            "purpose": "PASSWORD_RESET",
+        },
+        format="json",
+    )
+    assert verify.status_code == 400
+    assert verify.data["detail"] == "Invalid or expired code"
+    assert "reset_ticket" not in verify.data
+
+
+@pytest.mark.django_db
 def test_unknown_identifier_is_indistinguishable(settings):
     settings.INTEGRATION_DELIVERY_MODE = "async"
     client = APIClient()
