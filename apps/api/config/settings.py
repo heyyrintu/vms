@@ -125,6 +125,8 @@ _configured_web_origins = _csv_env("WEB_ORIGIN", "http://localhost:3000")
 WEB_ORIGIN = (_configured_web_origins[0] if _configured_web_origins else "http://localhost:3000").rstrip("/")
 # Signed WhatsApp quick-reply buttons may approve/reject; set false to make them record-only.
 WHATSAPP_INTERACTIVE_DECISIONS = os.getenv("WHATSAPP_INTERACTIVE_DECISIONS", "true").lower() == "true"
+# Rendered into the vms_login template's second variable.
+OTP_APP_LABEL = os.getenv("OTP_APP_LABEL", "Drona Logitech VMS")
 _configured_csrf_origins = _csv_env("CSRF_TRUSTED_ORIGINS", "http://localhost:3000")
 _local_dev_origins: list[str] = []
 if DEBUG:

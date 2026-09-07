@@ -136,3 +136,88 @@ def consume(challenge):
 def register_failed_attempt(challenge):
     challenge.attempts += 1
     challenge.save(update_fields=["attempts"])
+
+
+_TEMPLATE_KEYS = {
+    OtpChallenge.Purpose.LOGIN: (
+        "login_otp_template_name",
+        "WHATSAPP_LOGIN_OTP_TEMPLATE_NAME",
+        "vms_login",
+        "login_otp_template_language",
+        "WHATSAPP_LOGIN_OTP_TEMPLATE_LANGUAGE",
+    ),
+    OtpChallenge.Purpose.PASSWORD_RESET: (
+        "password_recovery_template_name",
+        "WHATSAPP_PASSWORD_RECOVERY_TEMPLATE_NAME",
+        "password_recovery",
+        "password_recovery_template_language",
+        "WHATSAPP_PASSWORD_RECOVERY_TEMPLATE_LANGUAGE",
+    ),
+}
+
+_COPY = {
+    OtpChallenge.Purpose.LOGIN: (
+        "Your Drona Logitech sign-in code",
+        "Sign-in code sent (code redacted)",
+        "LOGIN_OTP",
+    ),
+    OtpChallenge.Purpose.PASSWORD_RESET: (
+        "Your Drona Logitech password recovery code",
+        "Password recovery code sent (code redacted)",
+        "PASSWORD_RESET_OTP",
+    ),
+}
+
+
+def send_challenge(challenge, code):
+    from integrations.services import _whatsapp_template_setting, queue_message
+
+    subject, summary, event_key = _COPY[challenge.purpose]
+    minutes = int(CODE_TTL.total_seconds() // 60)
+    if challenge.purpose == OtpChallenge.Purpose.LOGIN:
+        body = (
+            f"OTP Code: {code}. This is your OTP code for {settings.OTP_APP_LABEL}. "
+            f"For your security, do not share this code. It expires in {minutes} minutes."
+        )
+        body_parameters = [code, settings.OTP_APP_LABEL]
+    else:
+        body = (
+            f"{code} is your password recovery code. For your security, do not share this code. "
+            f"It expires in {minutes} minutes."
+        )
+        body_parameters = [code]
+
+    provider_options = {}
+    if challenge.channel == OtpChallenge.Channel.WHATSAPP:
+        name_key, name_env, name_default, language_key, language_env = _TEMPLATE_KEYS[
+            challenge.purpose
+        ]
+        connection_option = _whatsapp_template_setting(
+            f"{challenge.purpose.lower()}_button_type", "WHATSAPP_OTP_BUTTON_TYPE", "none"
+        )
+        provider_options = {
+            "template_name": _whatsapp_template_setting(name_key, name_env, name_default),
+            "template_language": _whatsapp_template_setting(language_key, language_env, "en"),
+            "body_parameters": body_parameters,
+            "otp_button_type": connection_option,
+            "otp_button_code": code,
+        }
+        recipient = challenge.user.whatsapp_phone
+        channel = "WHATSAPP"
+    else:
+        recipient = challenge.user.email
+        channel = "EMAIL"
+
+    return queue_message(
+        channel=channel,
+        recipient=recipient,
+        subject=subject,
+        body=body,
+        summary=summary,
+        object_type="account",
+        object_id=str(challenge.user_id),
+        idempotency_key=f"otp:{challenge.id}",
+        user=challenge.user,
+        event_key=event_key,
+        provider_options=provider_options,
+    )

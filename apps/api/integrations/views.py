@@ -175,6 +175,10 @@ class IntegrationConnectionViewSet(viewsets.ReadOnlyModelViewSet):
             "operations_payment_template_language": "en",
             "operations_settlement_template_name": "drona_logitech_operations_settlement",
             "operations_settlement_template_language": "en",
+            "login_otp_template_name": "vms_login",
+            "login_otp_template_language": "en",
+            "password_recovery_template_name": "password_recovery",
+            "password_recovery_template_language": "en",
         }
         configuration = {
             key: str(request.data.get(key, default)).strip()
@@ -188,6 +192,11 @@ class IntegrationConnectionViewSet(viewsets.ReadOnlyModelViewSet):
                     {"detail": f"{key} must contain only lowercase letters, numbers, and underscores"},
                     status=400,
                 )
+        for key in ("login_button_type", "password_reset_button_type"):
+            value = str(request.data.get(key, "none")).strip().lower()
+            if value not in {"none", "copy_code", "url"}:
+                return Response({"detail": f"{key} must be none, copy_code or url"}, status=400)
+            configuration[key] = value
         credentials = {
             "access_token": request.data["access_token"],
             "phone_number_id": request.data["phone_number_id"],
