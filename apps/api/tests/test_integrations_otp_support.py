@@ -41,6 +41,41 @@ def test_queue_message_defaults_summary_to_the_body(settings):
     assert message.body_summary == "Body text"
 
 
+@pytest.mark.django_db
+def test_queue_message_truncates_a_caller_supplied_summary_to_1000_chars(settings):
+    settings.INTEGRATION_DELIVERY_MODE = "async"
+    long_summary = "s" * 1500
+    message = queue_message(
+        channel=IntegrationMessage.Channel.EMAIL,
+        recipient="member@drona.test",
+        subject="Your code",
+        body="Your code is 123456",
+        object_type="account",
+        object_id="1",
+        idempotency_key="otp:test-5",
+        summary=long_summary,
+    )
+    assert len(message.body_summary) == 1000
+    assert message.body_summary == long_summary[:1000]
+
+
+@pytest.mark.django_db
+def test_queue_message_truncates_the_body_default_summary_to_1000_chars(settings):
+    settings.INTEGRATION_DELIVERY_MODE = "async"
+    long_body = "b" * 1500
+    message = queue_message(
+        channel=IntegrationMessage.Channel.IN_APP,
+        recipient="",
+        subject="Hello",
+        body=long_body,
+        object_type="account",
+        object_id="1",
+        idempotency_key="otp:test-6",
+    )
+    assert len(message.body_summary) == 1000
+    assert message.body_summary == long_body[:1000]
+
+
 def test_whatsapp_copy_code_button_component(monkeypatch):
     sent = {}
     monkeypatch.setattr(
