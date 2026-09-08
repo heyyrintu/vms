@@ -192,11 +192,20 @@ class IntegrationConnectionViewSet(viewsets.ReadOnlyModelViewSet):
                     {"detail": f"{key} must contain only lowercase letters, numbers, and underscores"},
                     status=400,
                 )
+        existing = IntegrationConnection.objects.filter(
+            provider=IntegrationConnection.Provider.WHATSAPP
+        ).first()
+        existing_configuration = (existing.configuration if existing else None) or {}
         for key in ("login_button_type", "password_reset_button_type"):
-            value = str(request.data.get(key, "none")).strip().lower()
-            if value not in {"none", "copy_code", "url"}:
-                return Response({"detail": f"{key} must be none, copy_code or url"}, status=400)
-            configuration[key] = value
+            if key in request.data:
+                value = str(request.data.get(key, "none")).strip().lower()
+                if value not in {"none", "copy_code", "url"}:
+                    return Response({"detail": f"{key} must be none, copy_code or url"}, status=400)
+                configuration[key] = value
+            elif key in existing_configuration:
+                # Preserve whatever is already stored so an omitted key doesn't
+                # silently re-pin the setting to "none" and shadow the env default.
+                configuration[key] = existing_configuration[key]
         credentials = {
             "access_token": request.data["access_token"],
             "phone_number_id": request.data["phone_number_id"],

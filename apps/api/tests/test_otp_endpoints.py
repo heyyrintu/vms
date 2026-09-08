@@ -180,3 +180,62 @@ def test_resend_cooldown_returns_429(member, settings):
     client = APIClient()
     assert request_code(client, "member@drona.test").status_code == 200
     assert request_code(client, "member@drona.test").status_code == 429
+
+
+@pytest.mark.django_db
+def test_verify_with_a_non_uuid_challenge_id_returns_400_not_500():
+    client = APIClient()
+    response = client.post(
+        "/api/auth/otp/verify/",
+        {"challenge_id": "abc", "code": "123456"},
+        format="json",
+    )
+    assert response.status_code == 400
+    assert response.data["detail"] == "Invalid or expired code"
+
+
+@pytest.mark.django_db
+def test_password_reset_challenge_cannot_be_redeemed_as_login(member, settings):
+    settings.INTEGRATION_DELIVERY_MODE = "async"
+    client = APIClient()
+    response = request_code(client, "member@drona.test", purpose="PASSWORD_RESET")
+    assert response.status_code == 200
+
+    challenge = OtpChallenge.objects.get(user=member)
+    code = _code_for(challenge)
+
+    verify = client.post(
+        "/api/auth/otp/verify/",
+        {
+            "challenge_id": response.data["challenge_id"],
+            "code": code,
+            "purpose": "LOGIN",
+        },
+        format="json",
+    )
+    assert verify.status_code == 400
+    assert verify.data["detail"] == "Invalid or expired code"
+    assert client.get("/api/auth/me/").status_code != 200
+
+
+@pytest.mark.django_db
+def test_login_challenge_cannot_be_redeemed_as_password_reset(member, settings):
+    settings.INTEGRATION_DELIVERY_MODE = "async"
+    client = APIClient()
+    response = request_code(client, "member@drona.test", purpose="LOGIN")
+    assert response.status_code == 200
+
+    challenge = OtpChallenge.objects.get(user=member)
+    code = _code_for(challenge)
+
+    verify = client.post(
+        "/api/auth/otp/verify/",
+        {
+            "challenge_id": response.data["challenge_id"],
+            "code": code,
+            "purpose": "PASSWORD_RESET",
+        },
+        format="json",
+    )
+    assert verify.status_code == 400
+    assert "reset_ticket" not in verify.data
