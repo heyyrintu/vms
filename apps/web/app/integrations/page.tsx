@@ -78,6 +78,8 @@ export default function IntegrationsPage() {
     operations_approval_template_name: "drona_logitech_operations_approval",
     operations_payment_template_name: "drona_logitech_operations_payment",
     operations_settlement_template_name: "drona_logitech_operations_settlement",
+    login_otp_template_name: "vms_login",
+    password_recovery_template_name: "password_recovery",
   });
   const [error, setError] = useState<unknown>();
   const [message, setMessage] = useState("");
@@ -127,6 +129,8 @@ export default function IntegrationsPage() {
           operations_approval_template_language: whatsAppLanguage,
           operations_payment_template_language: whatsAppLanguage,
           operations_settlement_template_language: whatsAppLanguage,
+          login_otp_template_language: whatsAppLanguage,
+          password_recovery_template_language: whatsAppLanguage,
         }),
       });
       setToken("");

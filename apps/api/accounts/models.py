@@ -89,3 +89,9 @@ class OtpChallenge(models.Model):
 
     class Meta:
         indexes = [models.Index(fields=["user", "purpose", "-created_at"])]
+
+
+# Module-level alias so drf-spectacular's ENUM_NAME_OVERRIDES can resolve it.
+# Its loader traverses one level of class nesting, not the two that reaching
+# OtpChallenge.Purpose.choices would need.
+OTP_PURPOSE_CHOICES = OtpChallenge.Purpose.choices

@@ -4,7 +4,7 @@ Interactive documentation is served at `/api/docs/`; the generated OpenAPI docum
 
 Primary endpoints:
 
-- Authentication: `/api/auth/csrf/`, `/login/`, `/logout/`, `/me/`, `/password/change/`, `/password/reset/`, `/mfa/setup/`, `/mfa/confirm/`, `/mfa/disable/`
+- Authentication: `/api/auth/csrf/`, `/login/`, `/logout/`, `/me/`, `/password/change/`, `/password/reset/confirm/`, `/otp/request/`, `/otp/verify/`, `/mfa/setup/`, `/mfa/confirm/`, `/mfa/disable/`
 - Administration: `/api/users/`, `/api/settings/`, `/api/permission-matrix/`, `/api/approval-rules/`
 - Masters and operations: `/api/clients/`, `/api/vendors/`, `/api/vendor-contacts/`, `/api/vendor-bank-accounts/`, `/api/vehicles/`, `/api/drivers/`, `/api/indents/`, `/api/trips/`
 - Trip actions: `/api/trips/{id}/calculate/`, `/charges/`, `/revise/`, `/deliver/`, `/cancel/`
@@ -18,6 +18,10 @@ Primary endpoints:
 - Webhooks: `/api/webhooks/email/`, `/api/webhooks/whatsapp/`
 
 Unsafe requests require the `X-CSRFToken` header. All non-webhook endpoints except health/readiness/CSRF/login require an authenticated session. Role and object authorization are applied server-side.
+
+One-time codes are an alternative to password sign-in and the only route to password recovery. `POST /api/auth/otp/request/` takes `{identifier, purpose}`, where `identifier` is an email address or a WhatsApp number and `purpose` is `LOGIN` or `PASSWORD_RESET`; the identifier's shape selects the channel. It answers `{challenge_id, channel, destination_masked, expires_in}` and returns the same shape for an unknown identifier, so the endpoint cannot be used to discover which accounts exist. `POST /api/auth/otp/verify/` takes `{challenge_id, code, purpose}` and returns a session for `LOGIN` or `{reset_ticket}` for `PASSWORD_RESET`. A user with MFA enabled must also send `otp`, the authenticator code — a delivered code never substitutes for the second factor. Codes expire in five minutes, allow five attempts, and are single-use; requesting a new one invalidates the previous. `POST /api/auth/password/reset/confirm/` now takes `{reset_ticket, new_password}`.
+
+`/api/auth/password/reset/` was removed along with the emailed reset link it produced; `uid` and `token` are no longer accepted by the confirm endpoint. Because `email` and `whatsapp_phone` must resolve to exactly one account, both are uniquely constrained across all users; run `python manage.py check_login_identifiers` before migrating an existing database to list any conflicts.
 
 Files are returned only through authenticated `/api/documents/{id}/download/` actions; the object store is not exposed as a public media directory in production. Built-in page-number pagination defaults to 50 rows. Report endpoints additionally accept `date_from`, `date_to`, `vendor`, `client`, `branch`, `page_size`, and `format=csv|xlsx`.
 

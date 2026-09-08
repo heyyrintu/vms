@@ -1,7 +1,7 @@
 from django.utils.crypto import get_random_string
 from rest_framework import serializers
 
-from .models import User
+from .models import OTP_PURPOSE_CHOICES, User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -68,7 +68,7 @@ class OTPSerializer(serializers.Serializer):
 
 class OtpRequestSerializer(serializers.Serializer):
     identifier = serializers.CharField(max_length=180)
-    purpose = serializers.ChoiceField(choices=["LOGIN", "PASSWORD_RESET"])
+    purpose = serializers.ChoiceField(choices=OTP_PURPOSE_CHOICES)
 
 
 class OtpVerifySerializer(serializers.Serializer):
@@ -76,5 +76,5 @@ class OtpVerifySerializer(serializers.Serializer):
     # `code` is the six digits delivered over WhatsApp or email. `otp` is the
     # TOTP authenticator code, named to match LoginSerializer. Both may appear.
     code = serializers.CharField(min_length=6, max_length=6)
-    purpose = serializers.ChoiceField(choices=["LOGIN", "PASSWORD_RESET"], default="LOGIN")
+    purpose = serializers.ChoiceField(choices=OTP_PURPOSE_CHOICES, default="LOGIN")
     otp = serializers.CharField(required=False, allow_blank=True, write_only=True)

@@ -119,7 +119,12 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "Drona Logitech Operations API",
     "VERSION": "0.1.0",
     "SERVE_INCLUDE_SCHEMA": False,
-    "ENUM_NAME_OVERRIDES": {"TDSPolicyEnum": "core.models.TDSPolicy.choices"},
+    "ENUM_NAME_OVERRIDES": {
+        "TDSPolicyEnum": "core.models.TDSPolicy.choices",
+        # OtpRequestSerializer and OtpVerifySerializer both expose a "purpose"
+        # choice field, which collides without an explicit name.
+        "OtpPurposeEnum": "accounts.models.OTP_PURPOSE_CHOICES",
+    },
 }
 
 _configured_web_origins = _csv_env("WEB_ORIGIN", "http://localhost:3000")

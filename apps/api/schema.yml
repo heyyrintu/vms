@@ -13,6 +13,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
       tags:
       - api
       security:
@@ -199,6 +205,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
       tags:
       - api
       security:
@@ -343,6 +355,12 @@ paths:
         required: false
         in: query
         description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
         schema:
           type: integer
       tags:
@@ -513,6 +531,62 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/auth/otp/request/:
+    post:
+      operationId: api_auth_otp_request_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OtpRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OtpRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/auth/otp/verify/:
+    post:
+      operationId: api_auth_otp_verify_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpVerify'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OtpVerify'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OtpVerify'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/auth/password/change/:
     post:
       operationId: api_auth_password_change_create
@@ -532,34 +606,6 @@ paths:
         required: true
       security:
       - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: object
-                additionalProperties: {}
-          description: ''
-  /api/auth/password/reset/:
-    post:
-      operationId: api_auth_password_reset_create
-      tags:
-      - api
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PasswordResetRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PasswordResetRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PasswordResetRequest'
-        required: true
-      security:
-      - cookieAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -604,6 +650,12 @@ paths:
         required: false
         in: query
         description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
         schema:
           type: integer
       tags:
@@ -694,6 +746,21 @@ paths:
               schema:
                 $ref: '#/components/schemas/ClientBilling'
           description: ''
+  /api/choices/:
+    get:
+      operationId: api_choices_retrieve
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/clients/:
     get:
       operationId: api_clients_list
@@ -702,6 +769,12 @@ paths:
         required: false
         in: query
         description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
         schema:
           type: integer
       tags:
@@ -850,6 +923,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
       tags:
       - api
       security:
@@ -977,6 +1056,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
       tags:
       - api
       security:
@@ -1060,6 +1145,12 @@ paths:
         required: false
         in: query
         description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
         schema:
           type: integer
       tags:
@@ -1389,6 +1480,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
       tags:
       - api
       security:
@@ -1535,6 +1632,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
       tags:
       - api
       security:
@@ -1660,6 +1763,12 @@ paths:
         required: false
         in: query
         description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
         schema:
           type: integer
       tags:
@@ -1875,6 +1984,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
       tags:
       - api
       security:
@@ -1987,6 +2102,12 @@ paths:
         required: false
         in: query
         description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
         schema:
           type: integer
       tags:
@@ -2135,6 +2256,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
       tags:
       - api
       security:
@@ -2264,6 +2391,12 @@ paths:
         required: false
         in: query
         description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
         schema:
           type: integer
       tags:
@@ -2455,6 +2588,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
       tags:
       - api
       security:
@@ -2619,6 +2758,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
       tags:
       - api
       security:
@@ -2680,6 +2825,12 @@ paths:
         required: false
         in: query
         description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
         schema:
           type: integer
       tags:
@@ -3002,6 +3153,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
       tags:
       - api
       security:
@@ -3075,6 +3232,12 @@ paths:
         required: false
         in: query
         description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
         schema:
           type: integer
       tags:
@@ -3173,6 +3336,12 @@ paths:
         required: false
         in: query
         description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
         schema:
           type: integer
       tags:
@@ -3321,6 +3490,12 @@ paths:
         description: A page number within the paginated result set.
         schema:
           type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
       tags:
       - api
       security:
@@ -3465,6 +3640,12 @@ paths:
         required: false
         in: query
         description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
         schema:
           type: integer
       tags:
@@ -3632,6 +3813,12 @@ paths:
         required: false
         in: query
         description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
         schema:
           type: integer
       tags:
@@ -4040,6 +4227,10 @@ components:
     ApprovalBatchCreate:
       type: object
       properties:
+        submit:
+          type: boolean
+          writeOnly: true
+          default: false
         trip_ids:
           type: array
           items:
@@ -4048,10 +4239,20 @@ components:
           minItems: 1
         purpose:
           allOf:
-          - $ref: '#/components/schemas/PurposeEnum'
+          - $ref: '#/components/schemas/ApprovalBatchCreatePurposeEnum'
           default: ADVANCE
       required:
       - trip_ids
+    ApprovalBatchCreatePurposeEnum:
+      enum:
+      - ADVANCE
+      - FINAL_SETTLEMENT
+      - OTHER
+      type: string
+      description: |-
+        * `ADVANCE` - ADVANCE
+        * `FINAL_SETTLEMENT` - FINAL_SETTLEMENT
+        * `OTHER` - OTHER
     ApprovalBatchStatusEnum:
       enum:
       - DRAFT
@@ -5169,6 +5370,45 @@ components:
       required:
       - id
       - updated_at
+    OtpPurposeEnum:
+      enum:
+      - LOGIN
+      - PASSWORD_RESET
+      type: string
+      description: |-
+        * `LOGIN` - Login
+        * `PASSWORD_RESET` - Password reset
+    OtpRequest:
+      type: object
+      properties:
+        identifier:
+          type: string
+          maxLength: 180
+        purpose:
+          $ref: '#/components/schemas/OtpPurposeEnum'
+      required:
+      - identifier
+      - purpose
+    OtpVerify:
+      type: object
+      properties:
+        challenge_id:
+          type: string
+          maxLength: 64
+        code:
+          type: string
+          maxLength: 6
+          minLength: 6
+        purpose:
+          allOf:
+          - $ref: '#/components/schemas/OtpPurposeEnum'
+          default: LOGIN
+        otp:
+          type: string
+          writeOnly: true
+      required:
+      - challenge_id
+      - code
     PaginatedApprovalBatchList:
       type: object
       required:
@@ -5737,9 +5977,7 @@ components:
     PasswordResetConfirm:
       type: object
       properties:
-        uid:
-          type: string
-        token:
+        reset_ticket:
           type: string
         new_password:
           type: string
@@ -5747,16 +5985,7 @@ components:
           minLength: 12
       required:
       - new_password
-      - token
-      - uid
-    PasswordResetRequest:
-      type: object
-      properties:
-        email:
-          type: string
-          format: email
-      required:
-      - email
+      - reset_ticket
     PatchedApprovalRule:
       type: object
       properties:
@@ -6271,6 +6500,20 @@ components:
         id:
           type: integer
           readOnly: true
+        unloading_advance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          writeOnly: true
+        advance_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        active_approval:
+          type: object
+          additionalProperties: {}
+          nullable: true
+          readOnly: true
         client_name:
           type: string
           readOnly: true
@@ -6366,10 +6609,6 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
-        advance_percent:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
         client_billing_amount:
           type: string
           format: decimal
@@ -6806,16 +7045,6 @@ components:
       description: |-
         * `SMTP` - SMTP email
         * `WHATSAPP` - WhatsApp
-    PurposeEnum:
-      enum:
-      - ADVANCE
-      - FINAL_SETTLEMENT
-      - OTHER
-      type: string
-      description: |-
-        * `ADVANCE` - ADVANCE
-        * `FINAL_SETTLEMENT` - FINAL_SETTLEMENT
-        * `OTHER` - OTHER
     ResolutionMethodEnum:
       enum:
       - REFUND
@@ -6955,6 +7184,20 @@ components:
         id:
           type: integer
           readOnly: true
+        unloading_advance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          writeOnly: true
+        advance_percent:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        active_approval:
+          type: object
+          additionalProperties: {}
+          nullable: true
+          readOnly: true
         client_name:
           type: string
           readOnly: true
@@ -7050,10 +7293,6 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
-        advance_percent:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
         client_billing_amount:
           type: string
           format: decimal
@@ -7091,6 +7330,7 @@ components:
             type: integer
           readOnly: true
       required:
+      - active_approval
       - calculation
       - charges
       - client
