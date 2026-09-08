@@ -1,4 +1,5 @@
 import json
+import logging
 import mimetypes
 import os
 import re
@@ -12,6 +13,7 @@ from django.utils import timezone
 from audit.models import record_audit
 from core.crypto import decrypt_value, encrypt_value
 
+from .email_builder import render_email_html
 from .models import (
     IntegrationConnection,
     IntegrationMessage,
@@ -26,6 +28,8 @@ from .providers import (
     download_binary,
     request_json,
 )
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_TEMPLATES = {
     "APPROVAL_REQUESTED": (
@@ -61,6 +65,17 @@ DEFAULT_TEMPLATES = {
 }
 
 
+def build_html_body(*, subject, body, event_key="", object_type=""):
+    """A layout bug must never stop an approval or OTP mail; fall back to text only."""
+    try:
+        return render_email_html(
+            subject=subject, body=body, event_key=event_key, object_type=object_type
+        )
+    except Exception:
+        logger.exception("Falling back to plain text for %s email", event_key or "outbound")
+        return ""
+
+
 def _connection(provider):
     return IntegrationConnection.objects.filter(provider=provider, status="CONNECTED").first()
 
@@ -86,6 +101,8 @@ def get_provider(channel):
             username=credentials.get("username") or os.getenv("SMTP_USERNAME", ""),
             password=credentials.get("password") or os.getenv("SMTP_PASSWORD", ""),
             from_email=credentials.get("from_email") or os.getenv("SMTP_FROM_EMAIL", ""),
+            from_name=credentials.get("from_name") or os.getenv("SMTP_FROM_NAME", ""),
+            reply_to=credentials.get("reply_to") or os.getenv("SMTP_REPLY_TO", ""),
             use_tls=credentials.get(
                 "use_tls", os.getenv("SMTP_USE_TLS", "true").lower() == "true"
             ),
@@ -206,6 +223,16 @@ def deliver_message(message_or_id, *, actor=None):
                     "content_type": document.content_type,
                     "content": attachment.read(),
                 }
+        if message.channel == IntegrationMessage.Channel.EMAIL:
+            provider_options.setdefault(
+                "html_body",
+                build_html_body(
+                    subject=payload["subject"],
+                    body=payload["body"],
+                    event_key=message.event_key,
+                    object_type=message.object_type,
+                ),
+            )
         result = get_provider(message.channel).send(
             recipient=message.recipient,
             subject=payload["subject"],

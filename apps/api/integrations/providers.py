@@ -5,7 +5,7 @@ import ssl
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from email.message import EmailMessage
-from email.utils import make_msgid
+from email.utils import formataddr, formatdate, make_msgid
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 from uuid import uuid4
@@ -86,6 +86,8 @@ class SMTPProvider(MessageProvider):
         username="",
         password="",
         from_email="",
+        from_name="",
+        reply_to="",
         use_tls=True,
         use_ssl=False,
         timeout=20,
@@ -101,18 +103,32 @@ class SMTPProvider(MessageProvider):
         self.username = username
         self.password = password
         self.from_email = from_email
+        self.from_name = (from_name or "").strip()
+        self.reply_to = (reply_to or "").strip()
         self.use_tls = use_tls
         self.use_ssl = use_ssl
         self.timeout = int(timeout)
 
     def send(self, *, recipient, subject, body, idempotency_key, options=None):
+        options = options or {}
         message = EmailMessage()
-        message["From"] = self.from_email
+        message["From"] = (
+            formataddr((self.from_name, self.from_email)) if self.from_name else self.from_email
+        )
         message["To"] = recipient
         message["Subject"] = subject
         message["Message-ID"] = make_msgid()
+        # A missing Date header costs real spam points with strict filters.
+        message["Date"] = formatdate(localtime=True)
+        message["Auto-Submitted"] = "auto-generated"
         message["X-Drona-Idempotency-Key"] = idempotency_key
+        if self.reply_to:
+            message["Reply-To"] = self.reply_to
         message.set_content(body)
+        html_body = options.get("html_body")
+        if html_body:
+            # multipart/alternative: clients that cannot render HTML keep the text part.
+            message.add_alternative(html_body, subtype="html")
         client_class = smtplib.SMTP_SSL if self.use_ssl else smtplib.SMTP
         kwargs = {"host": self.host, "port": self.port, "timeout": self.timeout}
         if self.use_ssl:
