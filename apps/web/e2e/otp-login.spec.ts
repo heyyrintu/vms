@@ -30,9 +30,7 @@ test("otp sign-in walks from identifier to code to authenticator", async ({ page
   await stubApi(page);
   await page.route("**/api/auth/otp/request/", (route) => route.fulfill(json(challenge)));
   await page.route("**/api/auth/otp/verify/", (route) =>
-    route.fulfill(
-      json({ detail: "A valid authenticator code is required", mfa_required: true }, 400),
-    ),
+    route.fulfill(json({ detail: "A valid authenticator code is required", mfa_required: true }, 400)),
   );
 
   await page.goto("/login");
@@ -86,9 +84,7 @@ test("forgot password asks for an identifier then a code", async ({ page }) => {
 test("a verified recovery code reveals the new-password field", async ({ page }) => {
   await stubApi(page);
   await page.route("**/api/auth/otp/request/", (route) => route.fulfill(json(challenge)));
-  await page.route("**/api/auth/otp/verify/", (route) =>
-    route.fulfill(json({ reset_ticket: "signed:ticket:value" })),
-  );
+  await page.route("**/api/auth/otp/verify/", (route) => route.fulfill(json({ reset_ticket: "signed:ticket:value" })));
 
   await page.goto("/login");
   await page.getByRole("button", { name: "Forgot password?" }).click();
