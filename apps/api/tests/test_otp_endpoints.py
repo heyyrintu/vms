@@ -239,3 +239,43 @@ def test_login_challenge_cannot_be_redeemed_as_password_reset(member, settings):
     )
     assert verify.status_code == 400
     assert "reset_ticket" not in verify.data
+
+
+@pytest.mark.django_db
+def test_session_creating_views_reject_a_request_without_a_csrf_token(member, settings):
+    """A cross-origin form must not be able to log a victim into another account.
+
+    APIView.as_view() is wrapped in csrf_exempt, and DRF's SessionAuthentication
+    only enforces CSRF once a session already authenticates the request — so an
+    AllowAny view that calls login() is unprotected unless it opts back in.
+    """
+    settings.INTEGRATION_DELIVERY_MODE = "async"
+    csrf_client = APIClient(enforce_csrf_checks=True)
+
+    refused = csrf_client.post(
+        "/api/auth/otp/request/",
+        {"identifier": "member@drona.test", "purpose": "LOGIN"},
+        format="json",
+    )
+    assert refused.status_code == 403
+    assert OtpChallenge.objects.count() == 0
+
+    refused_login = csrf_client.post(
+        "/api/auth/login/",
+        {"username": "member", "password": "StrongPass123!"},
+        format="json",
+    )
+    assert refused_login.status_code == 403
+    assert csrf_client.get("/api/auth/me/").status_code != 200
+
+    # The same client succeeds once it carries the token the CSRF endpoint hands out.
+    csrf_client.get("/api/auth/csrf/")
+    token = csrf_client.cookies["csrftoken"].value
+    allowed = csrf_client.post(
+        "/api/auth/otp/request/",
+        {"identifier": "member@drona.test", "purpose": "LOGIN"},
+        format="json",
+        HTTP_X_CSRFTOKEN=token,
+    )
+    assert allowed.status_code == 200
+    assert OtpChallenge.objects.count() == 1

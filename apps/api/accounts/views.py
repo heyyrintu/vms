@@ -11,7 +11,7 @@ from django.core.exceptions import ValidationError
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
 from django.middleware.csrf import get_token
 from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -63,6 +63,7 @@ class CSRFView(APIView):
         return Response({"csrfToken": get_token(request)})
 
 
+@method_decorator(csrf_protect, name="dispatch")
 class LoginView(APIView):
     permission_classes = [AllowAny]
     throttle_scope = "login"
@@ -212,6 +213,7 @@ class MFADisableView(APIView):
         return Response({"status": "mfa_disabled"})
 
 
+@method_decorator(csrf_protect, name="dispatch")
 class OtpRequestView(APIView):
     permission_classes = [AllowAny]
     throttle_scope = "otp_request"
@@ -250,6 +252,7 @@ class OtpRequestView(APIView):
         })
 
 
+@method_decorator(csrf_protect, name="dispatch")
 class OtpVerifyView(APIView):
     permission_classes = [AllowAny]
     throttle_scope = "otp_verify"

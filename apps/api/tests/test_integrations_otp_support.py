@@ -76,7 +76,13 @@ def test_queue_message_truncates_the_body_default_summary_to_1000_chars(settings
     assert message.body_summary == long_body[:1000]
 
 
-def test_whatsapp_copy_code_button_component(monkeypatch):
+def test_whatsapp_authentication_template_sends_the_code_in_the_body_only(monkeypatch):
+    """Meta rejects a COPY_CODE authentication send that also carries a button.
+
+    The platform copies the code out of the body component itself. `sub_type`
+    "copy_code" with a `coupon_code` parameter belongs to marketing coupon
+    templates, and using it here returns 400.
+    """
     sent = {}
     monkeypatch.setattr(
         "integrations.providers.request_json",
@@ -91,16 +97,39 @@ def test_whatsapp_copy_code_button_component(monkeypatch):
         options={
             "template_name": "password_recovery",
             "body_parameters": ["123456"],
-            "otp_button_type": "copy_code",
             "otp_button_code": "123456",
         },
     )
     components = sent["payload"]["template"]["components"]
-    assert components[-1] == {
+    assert all(component["type"] != "button" for component in components)
+    assert components == [{"type": "body", "parameters": [{"type": "text", "text": "123456"}]}]
+
+
+def test_whatsapp_one_tap_template_carries_the_code_in_a_url_button(monkeypatch):
+    """ONE_TAP authentication templates are the only ones that take a button."""
+    sent = {}
+    monkeypatch.setattr(
+        "integrations.providers.request_json",
+        lambda url, **kwargs: sent.update(kwargs) or {"messages": [{"id": "wamid.5"}]},
+    )
+    provider = WhatsAppProvider(access_token="t", phone_number_id="1")
+    provider.send(
+        recipient="919811111111",
+        subject="",
+        body="ignored",
+        idempotency_key="otp:test-7",
+        options={
+            "template_name": "vms_login",
+            "body_parameters": ["123456"],
+            "otp_button_type": "url",
+            "otp_button_code": "123456",
+        },
+    )
+    assert sent["payload"]["template"]["components"][-1] == {
         "type": "button",
-        "sub_type": "copy_code",
+        "sub_type": "url",
         "index": "0",
-        "parameters": [{"type": "coupon_code", "coupon_code": "123456"}],
+        "parameters": [{"type": "text", "text": "123456"}],
     }
 
 

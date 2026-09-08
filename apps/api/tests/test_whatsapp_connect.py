@@ -35,12 +35,12 @@ def test_admin_can_connect_with_a_valid_button_type(users):
     client = _admin_client(users)
     response = client.post(
         "/api/integration-connections/whatsapp/connect/",
-        {**WHATSAPP_PAYLOAD, "login_button_type": "copy_code"},
+        {**WHATSAPP_PAYLOAD, "login_button_type": "url"},
         format="json",
     )
     assert response.status_code == 200
     connection = IntegrationConnection.objects.get(provider=IntegrationConnection.Provider.WHATSAPP)
-    assert connection.configuration["login_button_type"] == "copy_code"
+    assert connection.configuration["login_button_type"] == "url"
 
 
 @pytest.mark.django_db
@@ -62,7 +62,7 @@ def test_omitting_the_button_type_on_a_later_connect_preserves_the_stored_value(
     client = _admin_client(users)
     first = client.post(
         "/api/integration-connections/whatsapp/connect/",
-        {**WHATSAPP_PAYLOAD, "login_button_type": "copy_code"},
+        {**WHATSAPP_PAYLOAD, "login_button_type": "url"},
         format="json",
     )
     assert first.status_code == 200
@@ -74,4 +74,4 @@ def test_omitting_the_button_type_on_a_later_connect_preserves_the_stored_value(
     )
     assert second.status_code == 200
     connection = IntegrationConnection.objects.get(provider=IntegrationConnection.Provider.WHATSAPP)
-    assert connection.configuration["login_button_type"] == "copy_code"
+    assert connection.configuration["login_button_type"] == "url"

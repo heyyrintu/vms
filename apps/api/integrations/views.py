@@ -199,8 +199,8 @@ class IntegrationConnectionViewSet(viewsets.ReadOnlyModelViewSet):
         for key in ("login_button_type", "password_reset_button_type"):
             if key in request.data:
                 value = str(request.data.get(key, "none")).strip().lower()
-                if value not in {"none", "copy_code", "url"}:
-                    return Response({"detail": f"{key} must be none, copy_code or url"}, status=400)
+                if value not in {"none", "url"}:
+                    return Response({"detail": f"{key} must be none or url"}, status=400)
                 configuration[key] = value
             elif key in existing_configuration:
                 # Preserve whatever is already stored so an omitted key doesn't

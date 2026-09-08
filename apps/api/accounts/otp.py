@@ -64,23 +64,31 @@ def resolve_identifier(identifier):
     return user, OtpChallenge.Channel.WHATSAPP
 
 
+@transaction.atomic
 def issue_challenge(user, *, purpose, channel, request=None):
+    # Lock the user row for the whole check-then-write. Without it two concurrent
+    # requests both read the rate-limit counts before either inserts, so both pass
+    # and the user gets more live codes — and more delivered messages — than
+    # MAX_PER_HOUR allows.
+    locked_user = User.objects.select_for_update().get(pk=user.pk)
     now = timezone.now()
     recent = OtpChallenge.objects.filter(
-        user=user, purpose=purpose, created_at__gte=now - timedelta(hours=1)
+        user=locked_user, purpose=purpose, created_at__gte=now - timedelta(hours=1)
     )
     if recent.filter(created_at__gt=now - RESEND_COOLDOWN).exists():
         raise OtpRateLimited("A code was sent moments ago")
     if recent.count() >= MAX_PER_HOUR:
         raise OtpRateLimited("Too many codes requested in the last hour")
 
-    OtpChallenge.objects.filter(user=user, purpose=purpose, consumed_at__isnull=True).update(
-        consumed_at=now
+    OtpChallenge.objects.filter(
+        user=locked_user, purpose=purpose, consumed_at__isnull=True
+    ).update(consumed_at=now)
+    destination = (
+        locked_user.email if channel == OtpChallenge.Channel.EMAIL else locked_user.whatsapp_phone
     )
-    destination = user.email if channel == OtpChallenge.Channel.EMAIL else user.whatsapp_phone
     code = f"{secrets.randbelow(1_000_000):06d}"
     challenge = OtpChallenge(
-        user=user,
+        user=locked_user,
         purpose=purpose,
         channel=channel,
         destination_masked=mask_destination(destination),

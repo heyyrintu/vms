@@ -83,8 +83,10 @@ export default function IntegrationsPage() {
     login_otp_template_name: "vms_login",
     password_recovery_template_name: "password_recovery",
   });
-  const [loginButtonType, setLoginButtonType] = useState("none");
-  const [passwordResetButtonType, setPasswordResetButtonType] = useState("none");
+  // "" means "leave whatever is stored alone". The connect endpoint only
+  // writes a button type when the key is present in the request body.
+  const [loginButtonType, setLoginButtonType] = useState("");
+  const [passwordResetButtonType, setPasswordResetButtonType] = useState("");
   const [error, setError] = useState<unknown>();
   const [message, setMessage] = useState("");
 
@@ -135,8 +137,8 @@ export default function IntegrationsPage() {
           operations_settlement_template_language: whatsAppLanguage,
           login_otp_template_language: whatsAppLanguage,
           password_recovery_template_language: whatsAppLanguage,
-          login_button_type: loginButtonType,
-          password_reset_button_type: passwordResetButtonType,
+          ...(loginButtonType ? { login_button_type: loginButtonType } : {}),
+          ...(passwordResetButtonType ? { password_reset_button_type: passwordResetButtonType } : {}),
         }),
       });
       setToken("");
@@ -342,8 +344,8 @@ export default function IntegrationsPage() {
                 value={loginButtonType}
                 onChange={(event) => setLoginButtonType(event.target.value)}
               >
+                <option value="">Keep current setting</option>
                 <option value="none">None</option>
-                <option value="copy_code">Copy code</option>
                 <option value="url">URL</option>
               </select>
             </div>
@@ -355,8 +357,8 @@ export default function IntegrationsPage() {
                 value={passwordResetButtonType}
                 onChange={(event) => setPasswordResetButtonType(event.target.value)}
               >
+                <option value="">Keep current setting</option>
                 <option value="none">None</option>
-                <option value="copy_code">Copy code</option>
                 <option value="url">URL</option>
               </select>
             </div>
@@ -364,6 +366,9 @@ export default function IntegrationsPage() {
               <p className="muted" style={{ marginTop: 12 }}>
                 Saved Finance template:{" "}
                 <code>{whatsappConnection.configuration.finance_template_name || "not configured"}</code>
+                {" · "}Login button: <code>{whatsappConnection.configuration.login_button_type || "none"}</code>
+                {" · "}Recovery button:{" "}
+                <code>{whatsappConnection.configuration.password_reset_button_type || "none"}</code>
               </p>
             )}
             <button className="button primary" style={{ marginTop: 12 }}>
