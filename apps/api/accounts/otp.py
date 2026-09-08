@@ -17,6 +17,9 @@ MAX_ATTEMPTS = 5
 RESEND_COOLDOWN = timedelta(seconds=60)
 MAX_PER_HOUR = 5
 RESET_TICKET_MAX_AGE = 600
+# Meta rejects an AUTHENTICATION-template send outright (132018) when any body
+# parameter is longer than this, so operator-configured values are clamped.
+WHATSAPP_AUTH_PARAM_LIMIT = 15
 
 
 class OtpInvalid(Exception):
@@ -188,7 +191,7 @@ def send_challenge(challenge, code):
             f"OTP Code: {code}. This is your OTP code for {settings.OTP_APP_LABEL}. "
             f"For your security, do not share this code. It expires in {minutes} minutes."
         )
-        body_parameters = [code, settings.OTP_APP_LABEL]
+        body_parameters = [code, settings.OTP_APP_LABEL[:WHATSAPP_AUTH_PARAM_LIMIT]]
     else:
         body = (
             f"{code} is your password recovery code. For your security, do not share this code. "
@@ -201,12 +204,16 @@ def send_challenge(challenge, code):
         name_key, name_env, name_default, language_key, language_env = _TEMPLATE_KEYS[
             challenge.purpose
         ]
+        # Both approved OTP templates are AUTHENTICATION category and carry a
+        # copy-code URL button whose link embeds {{1}}, so every send must supply
+        # the button parameter. Defaulting to "none" made Meta reject the send
+        # with 132000 (parameter count mismatch) and no code was ever delivered.
         connection_option = _whatsapp_template_setting(
-            f"{challenge.purpose.lower()}_button_type", "WHATSAPP_OTP_BUTTON_TYPE", "none"
+            f"{challenge.purpose.lower()}_button_type", "WHATSAPP_OTP_BUTTON_TYPE", "url"
         )
         provider_options = {
             "template_name": _whatsapp_template_setting(name_key, name_env, name_default),
-            "template_language": _whatsapp_template_setting(language_key, language_env, "en"),
+            "template_language": _whatsapp_template_setting(language_key, language_env, "en_US"),
             "body_parameters": body_parameters,
             "otp_button_type": connection_option,
             "otp_button_code": code,

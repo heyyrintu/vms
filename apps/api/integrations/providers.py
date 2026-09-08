@@ -223,11 +223,11 @@ class WhatsAppProvider(MessageProvider):
                     "index": str(index),
                     "parameters": [{"type": "text", "text": str(value)[:2000]}],
                 })
-            # Authentication templates with a COPY_CODE button take the code in the
-            # body component alone — Meta rejects a payload that also carries a
-            # button component, and sub_type "copy_code" with a coupon_code
-            # parameter belongs to marketing coupon templates, not these. Only
-            # ONE_TAP templates take a button, and it is the url sub_type below.
+            # Authentication templates expose their copy-code button as a URL button
+            # whose link embeds {{1}} (.../otp/code/?otp_type=COPY_CODE&code=otp{{1}}), so
+            # the send MUST carry a matching button component or Meta rejects it with
+            # 132000. The sub_type is "url", not "copy_code" - the latter takes a
+            # coupon_code parameter and belongs to marketing coupon templates.
             otp_button_type = str(options.get("otp_button_type") or "none").lower()
             if otp_button_type == "url":
                 components.append({
