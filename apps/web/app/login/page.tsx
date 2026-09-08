@@ -29,9 +29,7 @@ export default function LoginPage() {
         <small className="login-footnote">Secure role-based access · INR financial controls · Asia/Kolkata</small>
       </section>
       <section className="login-form-wrap">
-        {mode === "password" && (
-          <PasswordSignIn onForgot={() => setMode("forgot")} onUseOtp={() => setMode("otp")} />
-        )}
+        {mode === "password" && <PasswordSignIn onForgot={() => setMode("forgot")} onUseOtp={() => setMode("otp")} />}
         {mode === "otp" && <OtpSignIn onBack={() => setMode("password")} />}
         {mode === "forgot" && <ForgotPassword onBack={() => setMode("password")} />}
       </section>

@@ -73,16 +73,28 @@ export function OtpSignIn({ onBack }: { onBack: () => void }) {
           {mfaRequired && (
             <div className="field">
               <label htmlFor="otp-authenticator">Authenticator code</label>
-              <input id="otp-authenticator" className="input" inputMode="numeric" maxLength={6}
-                value={authenticator} onChange={(event) => setAuthenticator(event.target.value)} />
+              <input
+                id="otp-authenticator"
+                className="input"
+                inputMode="numeric"
+                maxLength={6}
+                value={authenticator}
+                onChange={(event) => setAuthenticator(event.target.value)}
+              />
             </div>
           )}
         </>
       ) : (
         <div className="field">
           <label htmlFor="otp-identifier">Email or WhatsApp number</label>
-          <input id="otp-identifier" className="input" required value={identifier}
-            autoComplete="username" onChange={(event) => setIdentifier(event.target.value)} />
+          <input
+            id="otp-identifier"
+            className="input"
+            required
+            value={identifier}
+            autoComplete="username"
+            onChange={(event) => setIdentifier(event.target.value)}
+          />
         </div>
       )}
       <button className="button primary" disabled={busy}>

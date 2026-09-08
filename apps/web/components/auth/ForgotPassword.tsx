@@ -74,8 +74,13 @@ export function ForgotPassword({ onBack }: { onBack: () => void }) {
       {!challenge && (
         <div className="field">
           <label htmlFor="reset-identifier">Email or WhatsApp number</label>
-          <input id="reset-identifier" className="input" required value={identifier}
-            onChange={(event) => setIdentifier(event.target.value)} />
+          <input
+            id="reset-identifier"
+            className="input"
+            required
+            value={identifier}
+            onChange={(event) => setIdentifier(event.target.value)}
+          />
         </div>
       )}
       {challenge && !ticket && (
@@ -84,8 +89,15 @@ export function ForgotPassword({ onBack }: { onBack: () => void }) {
       {ticket && (
         <div className="field">
           <label htmlFor="reset-password">New password</label>
-          <input id="reset-password" type="password" className="input" required minLength={12}
-            value={password} onChange={(event) => setPassword(event.target.value)} />
+          <input
+            id="reset-password"
+            type="password"
+            className="input"
+            required
+            minLength={12}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
         </div>
       )}
       <button className="button primary" disabled={busy}>

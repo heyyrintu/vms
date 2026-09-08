@@ -43,18 +43,36 @@ export function PasswordSignIn({ onForgot, onUseOtp }: { onForgot: () => void; o
       {error && <div className="notice error">{error}</div>}
       <div className="field">
         <label htmlFor="username">Username</label>
-        <input id="username" className="input" value={username} autoComplete="username"
-          onChange={(event) => setUsername(event.target.value)} />
+        <input
+          id="username"
+          className="input"
+          value={username}
+          autoComplete="username"
+          onChange={(event) => setUsername(event.target.value)}
+        />
       </div>
       <div className="field">
         <label htmlFor="password">Password</label>
-        <input id="password" type="password" className="input" value={password} autoComplete="current-password"
-          onChange={(event) => setPassword(event.target.value)} />
+        <input
+          id="password"
+          type="password"
+          className="input"
+          value={password}
+          autoComplete="current-password"
+          onChange={(event) => setPassword(event.target.value)}
+        />
       </div>
       <div className="field">
         <label htmlFor="otp">Authenticator code (when enabled)</label>
-        <input id="otp" inputMode="numeric" maxLength={6} className="input" value={otp}
-          autoComplete="one-time-code" onChange={(event) => setOtp(event.target.value)} />
+        <input
+          id="otp"
+          inputMode="numeric"
+          maxLength={6}
+          className="input"
+          value={otp}
+          autoComplete="one-time-code"
+          onChange={(event) => setOtp(event.target.value)}
+        />
       </div>
       <button className="button primary" disabled={busy}>
         {busy ? "Signing in…" : "Sign in securely"}
