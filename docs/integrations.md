@@ -14,8 +14,31 @@ Set `EMAIL_PROVIDER=smtp` and provide these environment values, or save the same
 - `SMTP_FROM_EMAIL`
 - `SMTP_USE_TLS=true` and `SMTP_USE_SSL=false` for STARTTLS, or the inverse for implicit SSL
 - `SMTP_TIMEOUT_SECONDS` (defaults to `20`)
+- `SMTP_FROM_NAME` (optional friendly sender name, for example `Drona Logitech`)
+- `SMTP_REPLY_TO` (optional; point it at the mailbox whose replies are POSTed back to `/api/webhooks/email/`)
 
 The SMTP adapter encrypts UI-supplied credentials, adds a stable application idempotency header, records the RFC message ID, supports STARTTLS/SSL, and keeps retryable failures in the transactional outbox. A migration deliberately disconnects any old Gmail OAuth record because OAuth tokens are not SMTP credentials; enter the SMTP details after upgrading.
+
+### Branded HTML email
+
+Every outbound email is sent as `multipart/alternative`: the plain-text part is the exact body that was queued, and an HTML part carries the branded layout. Nothing at a call site changes — `integrations/email_builder.py` reads the queued text at delivery time and infers its structure (heading, paragraphs, key/value facts, trip line items, one call-to-action button, and the OTP code block), then `integrations/email_layout.py` renders it into a table-based, inline-styled shell that survives Outlook, Gmail and Apple Mail, with mobile and dark-mode variants. HTML is rendered at delivery, not at queue time, so a layout change also reaches mail that is already sitting in the outbox. If rendering ever raises, delivery falls back to text-only rather than failing.
+
+An email added later needs no template work; to give it a nicer heading, accent colour or button label, add its `event_key` to `EVENT_TITLES`, `EVENT_ACCENTS` and `EVENT_BUTTONS` in `integrations/email_builder.py`.
+
+Branding is environment-driven, so a deployment can rebrand without a code change:
+
+- `EMAIL_BRAND_NAME` (defaults to `Drona Logitech`) and `EMAIL_BRAND_TAGLINE` (defaults to `Vehicle Management System`)
+- `EMAIL_LOGO_URL` — a publicly reachable HTTPS image; when unset the header falls back to a text wordmark, which no client can block
+- `EMAIL_SUPPORT_EMAIL` and `EMAIL_BRAND_ADDRESS` for the footer
+- `EMAIL_PRIMARY_COLOR` (defaults to the product red `#d71920`)
+
+Review the rendered result for every email the system sends with:
+
+```
+python manage.py preview_emails --out tmp/email-preview
+```
+
+That writes one HTML file per email plus an `index.html`; open them in a browser or paste them into a rendering tester before changing the layout.
 
 SMTP is an outbound protocol. If your mail provider or inbound mail gateway can POST parsed replies, set `EMAIL_WEBHOOK_TOKEN` and send authenticated events to `/api/webhooks/email/` with `Authorization: Bearer <EMAIL_WEBHOOK_TOKEN>`. The JSON fields are `external_message_id`, `external_thread_id`, `subject`, `body`, and optional `sender`. Reply mapping remains idempotent and uses outbound thread IDs or stable `[PA-YYYY-NNNNNN]` approval references.
 
