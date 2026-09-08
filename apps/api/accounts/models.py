@@ -1,8 +1,11 @@
 import re
+import uuid
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Q, UniqueConstraint
+from django.db.models.functions import Lower
 
 
 class User(AbstractUser):
@@ -13,6 +16,20 @@ class User(AbstractUser):
         MANAGEMENT = "MANAGEMENT", "Management"
         TRANSPORTER = "TRANSPORTER", "Transporter"
         ADMIN = "ADMIN", "Admin"
+
+    class Meta(AbstractUser.Meta):
+        constraints = [
+            UniqueConstraint(
+                Lower("email"),
+                condition=~Q(email=""),
+                name="accounts_user_unique_email_ci",
+            ),
+            UniqueConstraint(
+                fields=["whatsapp_phone"],
+                condition=~Q(whatsapp_phone=""),
+                name="accounts_user_unique_whatsapp_phone",
+            ),
+        ]
 
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.OPERATIONS)
     vendor = models.ForeignKey(
@@ -45,3 +62,36 @@ class User(AbstractUser):
                 }
             )
         self.whatsapp_phone = normalized
+
+
+class OtpChallenge(models.Model):
+    class Purpose(models.TextChoices):
+        LOGIN = "LOGIN", "Login"
+        PASSWORD_RESET = "PASSWORD_RESET", "Password reset"
+
+    class Channel(models.TextChoices):
+        WHATSAPP = "WHATSAPP", "WhatsApp"
+        EMAIL = "EMAIL", "Email"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="otp_challenges")
+    purpose = models.CharField(max_length=20, choices=Purpose.choices)
+    channel = models.CharField(max_length=20, choices=Channel.choices)
+    code_hash = models.CharField(max_length=64)
+    destination_masked = models.CharField(max_length=120)
+    expires_at = models.DateTimeField(db_index=True)
+    attempts = models.PositiveSmallIntegerField(default=0)
+    # Set when the challenge stops being usable, whether it was redeemed or
+    # superseded by a newer code for the same user and purpose.
+    consumed_at = models.DateTimeField(null=True, blank=True)
+    request_ip = models.GenericIPAddressField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["user", "purpose", "-created_at"])]
+
+
+# Module-level alias so drf-spectacular's ENUM_NAME_OVERRIDES can resolve it.
+# Its loader traverses one level of class nesting, not the two that reaching
+# OtpChallenge.Purpose.choices would need.
+OTP_PURPOSE_CHOICES = OtpChallenge.Purpose.choices

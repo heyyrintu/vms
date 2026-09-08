@@ -21,6 +21,8 @@ type Connection = {
     operations_approval_template_name?: string;
     operations_payment_template_name?: string;
     operations_settlement_template_name?: string;
+    login_button_type?: string;
+    password_reset_button_type?: string;
   };
   last_error: string;
 };
@@ -78,7 +80,13 @@ export default function IntegrationsPage() {
     operations_approval_template_name: "drona_logitech_operations_approval",
     operations_payment_template_name: "drona_logitech_operations_payment",
     operations_settlement_template_name: "drona_logitech_operations_settlement",
+    login_otp_template_name: "vms_login",
+    password_recovery_template_name: "password_recovery",
   });
+  // "" means "leave whatever is stored alone". The connect endpoint only
+  // writes a button type when the key is present in the request body.
+  const [loginButtonType, setLoginButtonType] = useState("");
+  const [passwordResetButtonType, setPasswordResetButtonType] = useState("");
   const [error, setError] = useState<unknown>();
   const [message, setMessage] = useState("");
 
@@ -127,6 +135,10 @@ export default function IntegrationsPage() {
           operations_approval_template_language: whatsAppLanguage,
           operations_payment_template_language: whatsAppLanguage,
           operations_settlement_template_language: whatsAppLanguage,
+          login_otp_template_language: whatsAppLanguage,
+          password_recovery_template_language: whatsAppLanguage,
+          ...(loginButtonType ? { login_button_type: loginButtonType } : {}),
+          ...(passwordResetButtonType ? { password_reset_button_type: passwordResetButtonType } : {}),
         }),
       });
       setToken("");
@@ -324,10 +336,39 @@ export default function IntegrationsPage() {
                 />
               </div>
             ))}
+            <div className="field" style={{ marginTop: 12 }}>
+              <label htmlFor="whatsapp-login-button-type">Login OTP button type</label>
+              <select
+                id="whatsapp-login-button-type"
+                className="input"
+                value={loginButtonType}
+                onChange={(event) => setLoginButtonType(event.target.value)}
+              >
+                <option value="">Keep current setting</option>
+                <option value="none">None</option>
+                <option value="url">URL</option>
+              </select>
+            </div>
+            <div className="field" style={{ marginTop: 12 }}>
+              <label htmlFor="whatsapp-password-reset-button-type">Password recovery button type</label>
+              <select
+                id="whatsapp-password-reset-button-type"
+                className="input"
+                value={passwordResetButtonType}
+                onChange={(event) => setPasswordResetButtonType(event.target.value)}
+              >
+                <option value="">Keep current setting</option>
+                <option value="none">None</option>
+                <option value="url">URL</option>
+              </select>
+            </div>
             {whatsappConnection && (
               <p className="muted" style={{ marginTop: 12 }}>
                 Saved Finance template:{" "}
                 <code>{whatsappConnection.configuration.finance_template_name || "not configured"}</code>
+                {" · "}Login button: <code>{whatsappConnection.configuration.login_button_type || "none"}</code>
+                {" · "}Recovery button:{" "}
+                <code>{whatsappConnection.configuration.password_reset_button_type || "none"}</code>
               </p>
             )}
             <button className="button primary" style={{ marginTop: 12 }}>

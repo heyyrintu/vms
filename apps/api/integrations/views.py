@@ -175,6 +175,10 @@ class IntegrationConnectionViewSet(viewsets.ReadOnlyModelViewSet):
             "operations_payment_template_language": "en",
             "operations_settlement_template_name": "drona_logitech_operations_settlement",
             "operations_settlement_template_language": "en",
+            "login_otp_template_name": "vms_login",
+            "login_otp_template_language": "en",
+            "password_recovery_template_name": "password_recovery",
+            "password_recovery_template_language": "en",
         }
         configuration = {
             key: str(request.data.get(key, default)).strip()
@@ -188,6 +192,20 @@ class IntegrationConnectionViewSet(viewsets.ReadOnlyModelViewSet):
                     {"detail": f"{key} must contain only lowercase letters, numbers, and underscores"},
                     status=400,
                 )
+        existing = IntegrationConnection.objects.filter(
+            provider=IntegrationConnection.Provider.WHATSAPP
+        ).first()
+        existing_configuration = (existing.configuration if existing else None) or {}
+        for key in ("login_button_type", "password_reset_button_type"):
+            if key in request.data:
+                value = str(request.data.get(key, "none")).strip().lower()
+                if value not in {"none", "url"}:
+                    return Response({"detail": f"{key} must be none or url"}, status=400)
+                configuration[key] = value
+            elif key in existing_configuration:
+                # Preserve whatever is already stored so an omitted key doesn't
+                # silently re-pin the setting to "none" and shadow the env default.
+                configuration[key] = existing_configuration[key]
         credentials = {
             "access_token": request.data["access_token"],
             "phone_number_id": request.data["phone_number_id"],

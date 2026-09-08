@@ -14,9 +14,10 @@ from accounts.views import (
     MFAConfirmView,
     MFADisableView,
     MFASetupView,
+    OtpRequestView,
+    OtpVerifyView,
     PasswordChangeView,
     PasswordResetConfirmView,
-    PasswordResetRequestView,
 )
 from approvals.views import ApprovalBatchViewSet, ApprovalRuleViewSet, CommentViewSet
 from audit.views import AuditLogViewSet
@@ -110,11 +111,12 @@ urlpatterns = [
     path("api/auth/logout/", LogoutView.as_view()),
     path("api/auth/me/", MeView.as_view()),
     path("api/auth/password/change/", PasswordChangeView.as_view()),
-    path("api/auth/password/reset/", PasswordResetRequestView.as_view()),
     path("api/auth/password/reset/confirm/", PasswordResetConfirmView.as_view()),
     path("api/auth/mfa/setup/", MFASetupView.as_view()),
     path("api/auth/mfa/confirm/", MFAConfirmView.as_view()),
     path("api/auth/mfa/disable/", MFADisableView.as_view()),
+    path("api/auth/otp/request/", OtpRequestView.as_view()),
+    path("api/auth/otp/verify/", OtpVerifyView.as_view()),
     path("api/settings/", SettingsView.as_view()),
     path("api/choices/", ChoicesView.as_view()),
     path("api/permission-matrix/", PermissionMatrixView.as_view()),
