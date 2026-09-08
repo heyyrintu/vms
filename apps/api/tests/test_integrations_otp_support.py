@@ -97,6 +97,9 @@ def test_whatsapp_authentication_template_sends_the_code_in_the_body_only(monkey
         options={
             "template_name": "password_recovery",
             "body_parameters": ["123456"],
+            # Passed explicitly so this pins the copy_code path itself, not the
+            # default. Re-adding a copy_code button branch must fail here.
+            "otp_button_type": "copy_code",
             "otp_button_code": "123456",
         },
     )
