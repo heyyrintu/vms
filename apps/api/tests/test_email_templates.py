@@ -160,12 +160,12 @@ def test_smtp_attachments_keep_the_branded_html_body(monkeypatch):
             "html_body": "<html><body>Ready for payment</body></html>",
             "attachments": [
                 {
-                    "filename": "V-900-POD-scan.pdf",
+                    "filename": "V-900-POD.pdf",
                     "content_type": "application/pdf",
                     "content": b"%PDF-1.4\npod\n",
                 },
                 {
-                    "filename": "V-900-PAN-card.png",
+                    "filename": "V-900-PAN.png",
                     "content_type": "image/png",
                     "content": b"\x89PNG\r\n\x1a\npan",
                 },
@@ -183,8 +183,8 @@ def test_smtp_attachments_keep_the_branded_html_body(monkeypatch):
     assert "Ready for payment" in message.get_body(("html",)).get_content()
     attachments = list(message.iter_attachments())
     assert [part.get_filename() for part in attachments] == [
-        "V-900-POD-scan.pdf",
-        "V-900-PAN-card.png",
+        "V-900-POD.pdf",
+        "V-900-PAN.png",
     ]
     assert [part.get_content_type() for part in attachments] == ["application/pdf", "image/png"]
     assert attachments[0].get_payload(decode=True) == b"%PDF-1.4\npod\n"

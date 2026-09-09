@@ -181,10 +181,11 @@ def test_finance_email_attaches_every_clean_document_behind_the_payout(approved_
         Document.objects.values_list("pk", flat=True)
     )
     # Payment-critical evidence first, so a tight budget keeps the cheque.
-    assert [spec["filename"].split("-")[-2] for spec in specs] == [
-        "CANCELLED_CHEQUE",
-        "LR",
-        "PAN",
+    trip = approved_batch.items.first().trip
+    assert [spec["filename"] for spec in specs] == [
+        "V-900-CANCELLED_CHEQUE.pdf",
+        f"{trip.trip_no}-LR.pdf",
+        "V-900-PAN.pdf",
     ]
     assert "Attached: 3 files" in payload["body"]
     assert "Attached documents: Cancelled cheque, LR, PAN" in payload["body"]
@@ -199,19 +200,56 @@ def test_finance_email_attaches_every_clean_document_behind_the_payout(approved_
     assert whatsapp is None or "attachment_documents" not in _payload(whatsapp)["provider_options"]
 
 
-def test_attachment_filenames_are_scoped_to_the_vendor_and_trip(approved_batch):
+def test_attachment_filenames_name_the_owner_and_kind_not_the_upload(approved_batch, users):
     trip = approved_batch.items.first().trip
+    # A vendor's own filename can carry anything they typed, and an attachment
+    # name is visible in the mailbox, so it must not travel.
+    Document.objects.filter(kind=Document.Kind.CANCELLED_CHEQUE).update(
+        original_name="cheque for a-c 123456789012.pdf"
+    )
     filenames = {
-        spec["filename"]
-        for spec in _payload(_email_notice(approved_batch))["provider_options"][
-            "attachment_documents"
-        ]
+        spec["filename"] for spec in attachment_plan(vendor_payouts(approved_batch))[0]
     }
 
-    # Two vendors can both have uploaded `scan.pdf`; the owner disambiguates them.
-    assert "V-900-PAN-scan.pdf" in filenames
-    assert "V-900-CANCELLED_CHEQUE-scan.pdf" in filenames
-    assert f"{trip.trip_no}-LR-scan.pdf" in filenames
+    assert filenames == {
+        "V-900-PAN.pdf",
+        "V-900-CANCELLED_CHEQUE.pdf",
+        f"{trip.trip_no}-LR.pdf",
+    }
+    assert not any("123456789012" in name for name in filenames)
+
+
+def test_two_documents_of_one_kind_do_not_share_an_attachment_name(approved_batch, users):
+    trip = approved_batch.items.first().trip
+    _document(
+        object_type="trip",
+        object_id=trip.pk,
+        kind=Document.Kind.LR,
+        uploaded_by=users[User.Role.OPERATIONS],
+        name="second-lr.pdf",
+    )
+
+    filenames = [spec["filename"] for spec in attachment_plan(vendor_payouts(approved_batch))[0]]
+
+    assert filenames.count(f"{trip.trip_no}-LR.pdf") == 1
+    assert f"{trip.trip_no}-LR-2.pdf" in filenames
+    assert len(set(filenames)) == len(filenames)
+
+
+def test_an_unrecognised_content_type_keeps_the_uploaded_suffix(approved_batch, users):
+    trip = approved_batch.items.first().trip
+    document = _document(
+        object_type="trip",
+        object_id=trip.pk,
+        kind=Document.Kind.VENDOR_INVOICE,
+        uploaded_by=users[User.Role.OPERATIONS],
+        name="invoice.tiff",
+    )
+    Document.objects.filter(pk=document.pk).update(content_type="image/tiff")
+
+    filenames = {spec["filename"] for spec in attachment_plan(vendor_payouts(approved_batch))[0]}
+
+    assert f"{trip.trip_no}-VENDOR_INVOICE.tiff" in filenames
 
 
 def test_an_oversized_document_is_skipped_and_named_in_the_body(approved_batch, users):
@@ -229,7 +267,7 @@ def test_an_oversized_document_is_skipped_and_named_in_the_body(approved_batch, 
     specs, skipped = attachment_plan(groups)
     body = build_payout_brief(groups, attachments=specs, skipped=skipped)
 
-    assert "huge-pod.pdf" not in {spec["filename"] for spec in specs}
+    assert f"{trip.trip_no}-POD.pdf" not in {spec["filename"] for spec in specs}
     assert len(specs) == 3
     assert skipped == [f"POD ({trip.trip_no})"]
     assert (

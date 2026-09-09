@@ -42,6 +42,21 @@ ATTACHMENT_PRIORITY = (
 )
 DEFAULT_ATTACHMENT_LIMIT_MB = 15
 UNSAFE_FILENAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
+SAFE_SUFFIX_RE = re.compile(r"^\.[A-Za-z0-9]{1,8}$")
+# Derived from the type core.files verified against the file's magic bytes rather
+# than from mimetypes, whose answers on Windows come out of the registry.
+ATTACHMENT_EXTENSIONS = {
+    "application/pdf": ".pdf",
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx",
+    "audio/ogg": ".ogg",
+    "audio/mpeg": ".mp3",
+    "audio/mp4": ".m4a",
+    "video/mp4": ".mp4",
+    "video/3gpp": ".3gp",
+}
 
 
 def _amount(value):
@@ -186,10 +201,26 @@ def attachment_limit_bytes():
     return max(0, megabytes) * 1024 * 1024
 
 
+def _attachment_extension(document):
+    extension = ATTACHMENT_EXTENSIONS.get(document.content_type or "")
+    if extension:
+        return extension
+    # An unrecognised type keeps the uploaded suffix so the file still opens.
+    _stem, dot, suffix = (document.original_name or "").rpartition(".")
+    suffix = f"{dot}{suffix}".lower()
+    return suffix if SAFE_SUFFIX_RE.match(suffix) else ""
+
+
 def _attachment_filename(document, prefix):
-    """`V-900-PAN-scan.pdf` - two vendors can both have uploaded `scan.pdf`."""
-    name = UNSAFE_FILENAME_RE.sub("-", f"{prefix}-{document.kind}-{document.original_name}")
-    return name.strip("-")[:180] or f"document-{document.pk}"
+    """`V-900-PAN.pdf` - the owner and the kind, never the uploaded filename.
+
+    A vendor's own upload name can carry anything they typed, an account number
+    included, and an attachment name is visible in the mailbox. The vendor code
+    or trip number plus the document kind identifies the file without widening
+    what the notification exposes; `attachment_plan` numbers any duplicates.
+    """
+    name = UNSAFE_FILENAME_RE.sub("-", f"{prefix}-{document.kind}").strip("-")[:120]
+    return f"{name or f'document-{document.pk}'}{_attachment_extension(document)}"
 
 
 def _attachment_rank(entry):
@@ -224,6 +255,7 @@ def attachment_plan(groups, *, limit_bytes=None):
     specs = []
     skipped = []
     used = 0
+    taken = {}
     for document, prefix in entries:
         size = document.size or 0
         if used + size > budget:
@@ -232,7 +264,13 @@ def attachment_plan(groups, *, limit_bytes=None):
             skipped.append(f"{DOCUMENT_LABELS.get(document.kind, document.kind)} ({prefix})")
             continue
         used += size
-        specs.append({"id": document.pk, "filename": _attachment_filename(document, prefix)})
+        filename = _attachment_filename(document, prefix)
+        # Two PODs on one trip would otherwise arrive as the same name twice.
+        taken[filename] = seen_count = taken.get(filename, 0) + 1
+        if seen_count > 1:
+            stem, dot, extension = filename.rpartition(".")
+            filename = f"{stem}-{seen_count}{dot}{extension}" if dot else f"{filename}-{seen_count}"
+        specs.append({"id": document.pk, "filename": filename})
     return specs, skipped
 
 
