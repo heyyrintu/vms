@@ -39,7 +39,15 @@ function Documents({
           type="button"
           className="button small"
           key={doc.id}
-          onClick={() => onOpen(pack, Math.max(0, pack.findIndex((entry) => entry.id === doc.id)))}
+          onClick={() =>
+            onOpen(
+              pack,
+              Math.max(
+                0,
+                pack.findIndex((entry) => entry.id === doc.id),
+              ),
+            )
+          }
         >
           {doc.kind.replaceAll("_", " ")} · {doc.original_name}
         </button>

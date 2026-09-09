@@ -51,11 +51,7 @@ export function ContextDocuments({ objectType, objectId }: { objectType: "approv
         <div className="panel-body timeline">
           {rows.map((row, index) => (
             <div className="timeline-item" key={row.id}>
-              <button
-                type="button"
-                className="button small"
-                onClick={() => openDocument(rows, index)}
-              >
+              <button type="button" className="button small" onClick={() => openDocument(rows, index)}>
                 <strong>{row.original_name}</strong>
               </button>
               <small>

@@ -31,13 +31,15 @@ function Frame({ document }: { document: ViewableDocument }) {
     // eslint-disable-next-line @next/next/no-img-element -- a proxied API stream, not a static asset next/image can optimise.
     return <img className="doc-viewer-media" src={source} alt={`${label(document)} · ${document.original_name}`} />;
   if (type === "application/pdf")
-    return <iframe className="doc-viewer-media" src={source} title={`${label(document)} · ${document.original_name}`} />;
+    return (
+      <iframe className="doc-viewer-media" src={source} title={`${label(document)} · ${document.original_name}`} />
+    );
   return (
     <div className="doc-viewer-fallback">
       <strong>Preview not available</strong>
       <p className="muted">
-        {type ? `${type} files` : "This file type"} cannot be shown in the browser. Download it to open it in the
-        right application.
+        {type ? `${type} files` : "This file type"} cannot be shown in the browser. Download it to open it in the right
+        application.
       </p>
       <a className="button primary" href={document.download_url}>
         Download {document.original_name}
@@ -61,10 +63,7 @@ export function DocumentViewer({
   const total = documents.length;
   const current = documents[index];
 
-  const step = useCallback(
-    (delta: number) => onIndex((index + delta + total) % total),
-    [index, onIndex, total],
-  );
+  const step = useCallback((delta: number) => onIndex((index + delta + total) % total), [index, onIndex, total]);
 
   useEffect(() => {
     const opener = window.document.activeElement as HTMLElement | null;
