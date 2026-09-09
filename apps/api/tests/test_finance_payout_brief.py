@@ -1,6 +1,7 @@
 import json
 
 import pytest
+from django.core.files.base import ContentFile
 
 from accounts.models import User
 from approvals.models import ApprovalAction
@@ -8,26 +9,41 @@ from approvals.services import create_approval_batch, decide_batch, submit_batch
 from core.crypto import decrypt_value
 from integrations.email_builder import build_document
 from integrations.models import IntegrationMessage
+from integrations.services import deliver_message
 from operations.models import Document, Vendor, VendorBankAccount
-from payments.finance_brief import build_payout_brief, payout_summary, vendor_payouts
+from payments.finance_brief import (
+    attachment_plan,
+    build_payout_brief,
+    payout_summary,
+    vendor_payouts,
+)
 
 
-def _document(*, object_type, object_id, kind, uploaded_by, name="scan.pdf"):
+def _document(*, object_type, object_id, kind, uploaded_by, name="scan.pdf", size=None):
+    content = b"%PDF-1.4\n" + name.encode()
     return Document.objects.create(
         object_type=object_type,
         object_id=str(object_id),
         kind=kind,
-        file=name,
+        file=ContentFile(content, name=name),
         original_name=name,
         content_type="application/pdf",
-        size=1024,
+        # `size` is the row the attachment budget is weighed against, so a test can
+        # declare an oversized document without writing megabytes to disk.
+        size=len(content) if size is None else size,
         uploaded_by=uploaded_by,
         scan_status="CLEAN",
     )
 
 
 @pytest.fixture
-def approved_batch(db, trip_factory, users):
+def media_root(settings, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    return tmp_path
+
+
+@pytest.fixture
+def approved_batch(db, media_root, trip_factory, users):
     vendor = Vendor.objects.create(
         vendor_code="V-900",
         legal_name="Sharma Roadways Pvt Ltd",
@@ -145,3 +161,158 @@ def test_email_layout_turns_each_payout_into_its_own_section(approved_batch):
         ("Net", "47,050.00"),
     ]
     assert "Docs: LR" in items[0]["subtitle"]
+
+
+def _email_notice(batch):
+    return IntegrationMessage.objects.get(
+        event_key="FINANCE_READY", object_id=str(batch.pk), channel="EMAIL"
+    )
+
+
+def _payload(message):
+    return json.loads(decrypt_value(message.payload_encrypted))
+
+
+def test_finance_email_attaches_every_clean_document_behind_the_payout(approved_batch):
+    payload = _payload(_email_notice(approved_batch))
+    specs = payload["provider_options"]["attachment_documents"]
+
+    assert {spec["id"] for spec in specs} == set(
+        Document.objects.values_list("pk", flat=True)
+    )
+    # Payment-critical evidence first, so a tight budget keeps the cheque.
+    trip = approved_batch.items.first().trip
+    assert [spec["filename"] for spec in specs] == [
+        "V-900-CANCELLED_CHEQUE.pdf",
+        f"{trip.trip_no}-LR.pdf",
+        "V-900-PAN.pdf",
+    ]
+    assert "Attached: 3 files" in payload["body"]
+    assert "Attached documents: Cancelled cheque, LR, PAN" in payload["body"]
+    # The short channels stay short.
+    in_app = IntegrationMessage.objects.get(
+        event_key="FINANCE_READY", object_id=str(approved_batch.pk), channel="IN_APP"
+    )
+    assert "Attached" not in in_app.body_summary
+    whatsapp = IntegrationMessage.objects.filter(
+        event_key="FINANCE_READY", object_id=str(approved_batch.pk), channel="WHATSAPP"
+    ).first()
+    assert whatsapp is None or "attachment_documents" not in _payload(whatsapp)["provider_options"]
+
+
+def test_attachment_filenames_name_the_owner_and_kind_not_the_upload(approved_batch, users):
+    trip = approved_batch.items.first().trip
+    # A vendor's own filename can carry anything they typed, and an attachment
+    # name is visible in the mailbox, so it must not travel.
+    Document.objects.filter(kind=Document.Kind.CANCELLED_CHEQUE).update(
+        original_name="cheque for a-c 123456789012.pdf"
+    )
+    filenames = {
+        spec["filename"] for spec in attachment_plan(vendor_payouts(approved_batch))[0]
+    }
+
+    assert filenames == {
+        "V-900-PAN.pdf",
+        "V-900-CANCELLED_CHEQUE.pdf",
+        f"{trip.trip_no}-LR.pdf",
+    }
+    assert not any("123456789012" in name for name in filenames)
+
+
+def test_two_documents_of_one_kind_do_not_share_an_attachment_name(approved_batch, users):
+    trip = approved_batch.items.first().trip
+    _document(
+        object_type="trip",
+        object_id=trip.pk,
+        kind=Document.Kind.LR,
+        uploaded_by=users[User.Role.OPERATIONS],
+        name="second-lr.pdf",
+    )
+
+    filenames = [spec["filename"] for spec in attachment_plan(vendor_payouts(approved_batch))[0]]
+
+    assert filenames.count(f"{trip.trip_no}-LR.pdf") == 1
+    assert f"{trip.trip_no}-LR-2.pdf" in filenames
+    assert len(set(filenames)) == len(filenames)
+
+
+def test_an_unrecognised_content_type_keeps_the_uploaded_suffix(approved_batch, users):
+    trip = approved_batch.items.first().trip
+    document = _document(
+        object_type="trip",
+        object_id=trip.pk,
+        kind=Document.Kind.VENDOR_INVOICE,
+        uploaded_by=users[User.Role.OPERATIONS],
+        name="invoice.tiff",
+    )
+    Document.objects.filter(pk=document.pk).update(content_type="image/tiff")
+
+    filenames = {spec["filename"] for spec in attachment_plan(vendor_payouts(approved_batch))[0]}
+
+    assert f"{trip.trip_no}-VENDOR_INVOICE.tiff" in filenames
+
+
+def test_an_oversized_document_is_skipped_and_named_in_the_body(approved_batch, users):
+    trip = approved_batch.items.first().trip
+    _document(
+        object_type="trip",
+        object_id=trip.pk,
+        kind=Document.Kind.POD,
+        uploaded_by=users[User.Role.OPERATIONS],
+        name="huge-pod.pdf",
+        size=20 * 1024 * 1024,
+    )
+    groups = vendor_payouts(approved_batch)
+
+    specs, skipped = attachment_plan(groups)
+    body = build_payout_brief(groups, attachments=specs, skipped=skipped)
+
+    assert f"{trip.trip_no}-POD.pdf" not in {spec["filename"] for spec in specs}
+    assert len(specs) == 3
+    assert skipped == [f"POD ({trip.trip_no})"]
+    assert (
+        f"One document exceeds the email attachment limit and can be opened from the "
+        f"finance queue: POD ({trip.trip_no})." in body
+    )
+
+
+def test_the_budget_is_configurable(approved_batch, monkeypatch):
+    monkeypatch.setenv("FINANCE_EMAIL_ATTACHMENT_LIMIT_MB", "0")
+
+    specs, skipped = attachment_plan(vendor_payouts(approved_batch))
+
+    assert specs == []
+    assert len(skipped) == 3
+
+
+def test_delivery_survives_a_document_deleted_after_queueing(
+    db, media_root, monkeypatch, trip_factory, users
+):
+    monkeypatch.setenv("EMAIL_PROVIDER", "fake")
+    vendor = Vendor.objects.create(
+        vendor_code="V-902", legal_name="Late Delete Ltd", display_name="Late Delete"
+    )
+    trip = trip_factory(13, vendor=vendor)
+    operations = users[User.Role.OPERATIONS]
+    finance = users[User.Role.FINANCE]
+    finance.email = "accounts@example.test"
+    finance.save(update_fields=["email"])
+    _document(
+        object_type="vendor", object_id=vendor.pk, kind=Document.Kind.PAN, uploaded_by=operations
+    )
+    doomed = _document(
+        object_type="trip", object_id=trip.pk, kind=Document.Kind.LR, uploaded_by=operations
+    )
+    batch = create_approval_batch(actor=operations, trips=[trip])
+    submit_batch(batch=batch, actor=operations)
+    decide_batch(
+        batch=batch, actor=users[User.Role.APPROVER], decision=ApprovalAction.Action.APPROVE
+    )
+    message = _email_notice(batch)
+    assert len(_payload(message)["provider_options"]["attachment_documents"]) == 2
+
+    doomed.delete()
+    delivered = deliver_message(message)
+
+    assert delivered.status == "SENT"
+    assert delivered.raw_metadata["attachment_count"] == 1

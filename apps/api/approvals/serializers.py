@@ -85,6 +85,9 @@ class CommentSerializer(serializers.ModelSerializer):
                 "scan_status": document.scan_status,
                 "created_at": document.created_at,
                 "download_url": f"/api/documents/{document.pk}/download/",
+                "content_type": document.content_type,
+                "size": document.size,
+                "preview_url": f"/api/documents/{document.pk}/preview/",
             }
             for document in obj.attachments.all()
         ]

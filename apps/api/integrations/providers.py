@@ -73,6 +73,7 @@ class FakeMessageProvider(MessageProvider):
                 "has_document": bool((options or {}).get("document")),
                 "quick_reply_count": len((options or {}).get("quick_reply_payloads", [])),
                 "url_button_count": len((options or {}).get("url_button_parameters", [])),
+                "attachment_count": len((options or {}).get("attachments") or []),
             },
         )
 
@@ -129,6 +130,18 @@ class SMTPProvider(MessageProvider):
         if html_body:
             # multipart/alternative: clients that cannot render HTML keep the text part.
             message.add_alternative(html_body, subtype="html")
+        attachments = options.get("attachments") or []
+        for attachment in attachments:
+            # add_attachment() promotes the message to multipart/mixed and keeps the
+            # text+HTML alternative pair intact as the first part, so the branded
+            # body survives; test_email_templates asserts that it does.
+            maintype, _, subtype = str(attachment["content_type"] or "").partition("/")
+            message.add_attachment(
+                attachment["content"],
+                maintype=maintype or "application",
+                subtype=subtype or "octet-stream",
+                filename=attachment["filename"],
+            )
         client_class = smtplib.SMTP_SSL if self.use_ssl else smtplib.SMTP
         kwargs = {"host": self.host, "port": self.port, "timeout": self.timeout}
         if self.use_ssl:
@@ -152,6 +165,7 @@ class SMTPProvider(MessageProvider):
                 "host": self.host,
                 "port": self.port,
                 "security": "SSL" if self.use_ssl else "STARTTLS" if self.use_tls else "PLAIN",
+                "attachment_count": len(attachments),
             },
         )
 

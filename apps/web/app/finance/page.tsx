@@ -6,15 +6,51 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 import type { DocumentRecord, Payment, PendingGroup } from "@/lib/types";
 import { DateText, Empty, ErrorNotice, Loading, Money, PageHeader, StatusBadge } from "@/components/UI";
+import { type ViewableDocument, useDocumentViewer } from "@/components/DocumentViewer";
 
-function Documents({ documents, empty }: { documents: DocumentRecord[]; empty: string }) {
+/** Every clean document behind one payout, in the order finance reads them. */
+function payoutDeck(group: PendingGroup): DocumentRecord[] {
+  return [
+    ...group.vendor_documents,
+    ...group.bank_accounts.flatMap((account) => account.cancelled_cheque_documents ?? []),
+    ...group.items.flatMap((item) => [...(item.trip_documents ?? []), ...(item.driver_documents ?? [])]),
+  ];
+}
+
+function Documents({
+  documents,
+  empty,
+  deck,
+  onOpen,
+}: {
+  documents: DocumentRecord[];
+  empty: string;
+  deck: DocumentRecord[];
+  onOpen: (documents: ViewableDocument[], index: number) => void;
+}) {
   if (!documents.length) return <span className="muted">{empty}</span>;
+  // Clicking any file opens the whole evidence pack, so finance can page through
+  // KYC, the cancelled cheque and every trip document without closing the viewer.
+  const pack = deck.length ? deck : documents;
   return (
     <div className="actions">
       {documents.map((doc) => (
-        <a className="button small" href={doc.download_url} key={doc.id}>
+        <button
+          type="button"
+          className="button small"
+          key={doc.id}
+          onClick={() =>
+            onOpen(
+              pack,
+              Math.max(
+                0,
+                pack.findIndex((entry) => entry.id === doc.id),
+              ),
+            )
+          }
+        >
           {doc.kind.replaceAll("_", " ")} · {doc.original_name}
-        </a>
+        </button>
       ))}
     </div>
   );
@@ -31,6 +67,8 @@ function VendorPaymentGroup({ group, refresh }: { group: PendingGroup; refresh: 
   const [proofId, setProofId] = useState<number | undefined>();
   const [error, setError] = useState<unknown>();
   const [busy, setBusy] = useState(false);
+  const { open: openDocument, viewer } = useDocumentViewer();
+  const deck = payoutDeck(group);
   const chosen = group.items.filter((item) => selected.includes(item.approval_item_id));
   const totals = chosen.reduce(
     (sum, item) => {
@@ -137,7 +175,12 @@ function VendorPaymentGroup({ group, refresh }: { group: PendingGroup; refresh: 
           <p className="muted">
             {group.vendor_email || "No email"} · {group.vendor_phone || "No phone"}
           </p>
-          <Documents documents={group.vendor_documents} empty="No clean vendor Aadhaar/PAN documents uploaded." />
+          <Documents
+            documents={group.vendor_documents}
+            empty="No clean vendor Aadhaar/PAN documents uploaded."
+            deck={deck}
+            onOpen={openDocument}
+          />
         </div>
         <div>
           <h3>Bank verification</h3>
@@ -167,7 +210,12 @@ function VendorPaymentGroup({ group, refresh }: { group: PendingGroup; refresh: 
                       <td>{account.ifsc_code}</td>
                       <td>
                         {account.cancelled_cheque_documents?.length ? (
-                          <Documents documents={account.cancelled_cheque_documents} empty="" />
+                          <Documents
+                            documents={account.cancelled_cheque_documents}
+                            empty=""
+                            deck={deck}
+                            onOpen={openDocument}
+                          />
                         ) : (
                           <StatusBadge value="MISSING" />
                         )}
@@ -220,12 +268,17 @@ function VendorPaymentGroup({ group, refresh }: { group: PendingGroup; refresh: 
                   <div className="muted">
                     Deploy <DateText value={item.deployment_date} /> · Created <DateText value={item.trip_created_at} />
                   </div>
-                  <Documents documents={item.trip_documents} empty="No trip docs" />
+                  <Documents documents={item.trip_documents} empty="No trip docs" deck={deck} onOpen={openDocument} />
                 </td>
                 <td>
                   <strong>{item.driver_name}</strong>
                   <div className="muted">{item.driver_phone}</div>
-                  <Documents documents={item.driver_documents} empty="No driver Aadhaar/DL/PAN" />
+                  <Documents
+                    documents={item.driver_documents}
+                    empty="No driver Aadhaar/DL/PAN"
+                    deck={deck}
+                    onOpen={openDocument}
+                  />
                 </td>
                 <td className="money">
                   <Money value={item.freight_100} />
@@ -401,6 +454,7 @@ function VendorPaymentGroup({ group, refresh }: { group: PendingGroup; refresh: 
           </div>
         </div>
       )}
+      {viewer}
     </section>
   );
 }

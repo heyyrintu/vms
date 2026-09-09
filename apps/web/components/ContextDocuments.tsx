@@ -5,15 +5,9 @@ import { useQuery } from "@tanstack/react-query";
 import { api, listResults } from "@/lib/api";
 import type { Paginated } from "@/lib/types";
 import { DateText, Empty, ErrorNotice, StatusBadge } from "@/components/UI";
+import { type ViewableDocument, useDocumentViewer } from "@/components/DocumentViewer";
 
-type Document = {
-  id: number;
-  kind: string;
-  original_name: string;
-  scan_status: string;
-  download_url: string;
-  created_at: string;
-};
+type Document = ViewableDocument & { created_at: string };
 
 export function ContextDocuments({ objectType, objectId }: { objectType: "approval" | "payment"; objectId: string }) {
   const query = useQuery({
@@ -22,6 +16,7 @@ export function ContextDocuments({ objectType, objectId }: { objectType: "approv
   });
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<unknown>();
+  const { open: openDocument, viewer } = useDocumentViewer();
   const upload = async (event: FormEvent) => {
     event.preventDefault();
     if (!file) return;
@@ -54,11 +49,11 @@ export function ContextDocuments({ objectType, objectId }: { objectType: "approv
         <Empty message="No attachments." />
       ) : (
         <div className="panel-body timeline">
-          {rows.map((row) => (
+          {rows.map((row, index) => (
             <div className="timeline-item" key={row.id}>
-              <a href={row.download_url}>
+              <button type="button" className="button small" onClick={() => openDocument(rows, index)}>
                 <strong>{row.original_name}</strong>
-              </a>
+              </button>
               <small>
                 <DateText value={row.created_at} /> · <StatusBadge value={row.scan_status} />
               </small>
@@ -81,6 +76,7 @@ export function ContextDocuments({ objectType, objectId }: { objectType: "approv
           Upload
         </button>
       </form>
+      {viewer}
     </section>
   );
 }

@@ -9,6 +9,7 @@ import type { Paginated, Trip } from "@/lib/types";
 import { TripIndentsPanel } from "@/components/TripIndentsPanel";
 import { CommentsPanel } from "@/components/CommentsPanel";
 import { DateText, Empty, ErrorNotice, Loading, Money, PageHeader, StatusBadge } from "@/components/UI";
+import { type ViewableDocument, useDocumentViewer } from "@/components/DocumentViewer";
 
 type TripLedger = {
   trip_no: string;
@@ -30,15 +31,7 @@ type TripLedger = {
   margin_percent?: string;
   events: unknown[];
 };
-type Document = {
-  id: number;
-  kind: string;
-  original_name: string;
-  size: number;
-  scan_status: string;
-  download_url: string;
-  created_at: string;
-};
+type Document = ViewableDocument & { size: number; created_at: string };
 type Settlement = {
   id: number;
   final_freight: string;
@@ -105,6 +98,7 @@ export default function TripDetailPage() {
   });
   const [file, setFile] = useState<File | null>(null);
   const [kind, setKind] = useState("POD");
+  const { open: openDocument, viewer } = useDocumentViewer();
   const [settlementForm, setSettlementForm] = useState({
     final_freight: "",
     additive_charges: "0",
@@ -349,11 +343,13 @@ export default function TripDetailPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {docs.map((doc) => (
+                    {docs.map((doc, index) => (
                       <tr key={doc.id}>
                         <td>{doc.kind}</td>
                         <td>
-                          <a href={doc.download_url}>{doc.original_name}</a>
+                          <button type="button" className="button small" onClick={() => openDocument(docs, index)}>
+                            {doc.original_name}
+                          </button>
                         </td>
                         <td>
                           <StatusBadge value={doc.scan_status} />
@@ -625,6 +621,7 @@ export default function TripDetailPage() {
           )}
         </aside>
       </div>
+      {viewer}
     </>
   );
 }

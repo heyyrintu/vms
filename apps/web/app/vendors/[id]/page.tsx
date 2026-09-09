@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { api, listResults } from "@/lib/api";
 import type { DocumentRecord, Paginated, Vendor } from "@/lib/types";
 import { DateText, Empty, ErrorNotice, Loading, Money, PageHeader, StatusBadge } from "@/components/UI";
+import { DocumentChips, useDocumentViewer } from "@/components/DocumentViewer";
 
 type Ledger = {
   vendor_name: string;
@@ -35,6 +36,7 @@ type Ledger = {
 
 function ChequeProof({ bankId, uploaded }: { bankId: number; uploaded: boolean }) {
   const [open, setOpen] = useState(false);
+  const { open: openDocument, viewer } = useDocumentViewer();
   const proof = useQuery({
     queryKey: ["documents", "vendor-bank-account", bankId],
     queryFn: async () =>
@@ -51,12 +53,17 @@ function ChequeProof({ bankId, uploaded }: { bankId: number; uploaded: boolean }
       </button>
     );
   if (proof.isPending) return <span className="muted">Loading…</span>;
-  if (proof.data)
+  if (proof.data) {
+    const document = proof.data;
     return (
-      <a className="chip" href={proof.data.download_url}>
-        View proof
-      </a>
+      <>
+        <button type="button" className="chip" onClick={() => openDocument([document], 0)}>
+          View proof
+        </button>
+        {viewer}
+      </>
     );
+  }
   return <StatusBadge value="VERIFIED" />;
 }
 
@@ -69,6 +76,7 @@ export default function VendorDetailPage() {
     queryFn: async () =>
       listResults(await api<Paginated<DocumentRecord>>(`/documents/?object_type=vendor&object_id=${id}`)),
   });
+  const { open: openDocument, viewer } = useDocumentViewer();
   if (vendor.isPending) return <Loading />;
   if (vendor.error) return <ErrorNotice error={vendor.error} />;
   const v = vendor.data!;
@@ -145,13 +153,13 @@ export default function VendorDetailPage() {
             <Empty message="No Aadhaar or PAN uploaded" />
           ) : (
             <div className="panel-body">
-              <div className="actions">
-                {kyc.data.map((document) => (
-                  <a key={document.id} className="chip" href={document.download_url}>
-                    {document.kind} · {document.original_name}
-                  </a>
-                ))}
-              </div>
+              <DocumentChips
+                documents={kyc.data}
+                empty=""
+                onOpen={openDocument}
+                variant="chip"
+                render={(document) => `${document.kind} · ${document.original_name}`}
+              />
             </div>
           )}
         </section>
@@ -237,6 +245,7 @@ export default function VendorDetailPage() {
           </section>
         </>
       )}
+      {viewer}
     </>
   );
 }

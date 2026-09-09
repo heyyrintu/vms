@@ -472,6 +472,11 @@ class TripViewSet(AuditedModelViewSet):
         return Response(self.get_serializer(trip).data)
 
 
+# What the in-app viewer can render itself. Anything else - a spreadsheet, an
+# audio note - is handed back as a download rather than dropped into an iframe.
+INLINE_PREVIEW_TYPES = {"application/pdf", "image/jpeg", "image/png", "image/webp"}
+
+
 class DocumentViewSet(viewsets.ModelViewSet):
     queryset = Document.objects.none()
     serializer_class = DocumentSerializer
@@ -566,6 +571,24 @@ class DocumentViewSet(viewsets.ModelViewSet):
     def download(self, request, pk=None):
         document = self.get_object()
         return FileResponse(document.file.open("rb"), as_attachment=True, filename=document.original_name)
+
+    @action(detail=True, methods=["get"])
+    def preview(self, request, pk=None):
+        """The same bytes as `download`, rendered in place for the document viewer."""
+        document = self.get_object()
+        inline = document.content_type in INLINE_PREVIEW_TYPES
+        response = FileResponse(
+            document.file.open("rb"),
+            as_attachment=not inline,
+            filename=document.original_name,
+            content_type=document.content_type if inline else "application/octet-stream",
+        )
+        # Uploaded bytes served from the app origin: stop the browser sniffing a
+        # different type and stop the document itself running anything. Uploads are
+        # already signature-checked by core.files, so this is defence in depth.
+        response["X-Content-Type-Options"] = "nosniff"
+        response["Content-Security-Policy"] = "sandbox; default-src 'none'; object-src 'none'"
+        return response
 
 
 class TripRecoveryViewSet(viewsets.ModelViewSet):

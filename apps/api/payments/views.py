@@ -48,6 +48,11 @@ def _document_payload(document, request):
         "scan_status": document.scan_status,
         "uploaded_at": document.created_at,
         "download_url": f"/api/documents/{document.pk}/download/",
+        # The finance viewer pages through the whole evidence pack in place, and
+        # needs the type to decide between an image, a PDF frame or a download.
+        "content_type": document.content_type,
+        "size": document.size,
+        "preview_url": f"/api/documents/{document.pk}/preview/",
     }
 
 

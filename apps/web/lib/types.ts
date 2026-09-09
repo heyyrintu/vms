@@ -53,6 +53,9 @@ export type DocumentRecord = {
   kind: string;
   original_name: string;
   download_url: string;
+  preview_url: string;
+  content_type: string;
+  size?: number;
   scan_status: string;
   created_at: string;
 };

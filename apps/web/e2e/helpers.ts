@@ -46,12 +46,17 @@ function rows<T>(value: Paged<T>): T[] {
 
 /** Creates a READY trip (and a vendor bank account if missing) so workflow tests never depend on leftover seed state. */
 export async function createReadyTrip(page: Page): Promise<{ id: number; trip_no: string; vendor: number }> {
-  const clients = rows(await apiCall<Paged<{ id: number }>>(page, "/api/clients/?page_size=1"));
   const vendors = rows(
     await apiCall<Paged<{ id: number; bank_accounts?: unknown[] }>>(page, "/api/vendors/?status=ACTIVE&page_size=50"),
   );
+  // The client comes from the indent, never from a separate clients[0] lookup:
+  // the API rejects a trip whose client and indent disagree, and any run that
+  // creates a client sorting ahead of the seeded one would break that pairing.
   const indents = rows(
-    await apiCall<Paged<{ id: number; origin: string; destination: string }>>(page, "/api/indents/?page_size=1"),
+    await apiCall<Paged<{ id: number; client: number; origin: string; destination: string }>>(
+      page,
+      "/api/indents/?page_size=1",
+    ),
   );
   let vendor: { id: number } | undefined;
   let vehicle: { id: number } | undefined;
@@ -65,8 +70,7 @@ export async function createReadyTrip(page: Page): Promise<{ id: number; trip_no
       break;
     }
   }
-  if (!vendor || !vehicle || !clients.length || !indents.length)
-    throw new Error("Seed data lacks a client, vendor with vehicle, or indent");
+  if (!vendor || !vehicle || !indents.length) throw new Error("Seed data lacks an indent or a vendor with a vehicle");
   const drivers = rows(await apiCall<Paged<{ id: number }>>(page, `/api/drivers/?vendor=${vendor.id}&page_size=1`));
   const driver = drivers[0] ?? rows(await apiCall<Paged<{ id: number }>>(page, "/api/drivers/?page_size=1"))[0];
   if (!driver) throw new Error("Seed data lacks a driver; run manage.py seed_demo before the e2e suite");
@@ -85,7 +89,7 @@ export async function createReadyTrip(page: Page): Promise<{ id: number; trip_no
   const trip = await apiCall<{ id: number; trip_no: string }>(page, "/api/trips/", "POST", {
     indent: indent.id,
     indent_ids: [indent.id],
-    client: clients[0].id,
+    client: indent.client,
     origin: indent.origin,
     destination: indent.destination,
     deployment_date: today,
