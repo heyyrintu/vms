@@ -1,0 +1,32 @@
+# Normalise every text file to LF in the repository and check it out as LF on
+# every platform, so a Windows working tree is byte-identical to the one CI
+# builds from.
+#
+# Without this, a Windows clone with core.autocrlf=true gets a CRLF working
+# tree while the blobs stay LF. `npm run format:check` then fails on dozens of
+# files nobody has touched - Prettier's endOfLine default is "lf" - so the one
+# local command that would have caught a real formatting error is buried in
+# noise, and the error reaches CI instead. Every blob in this repository is
+# already LF, so this changes what is checked out, never what is stored.
+* text=auto eol=lf
+
+# The exception: these run on Windows hosts, where CRLF is the safe default for
+# a script.
+*.ps1 text eol=crlf
+
+# Binaries must never be line-ending converted or diffed as text. `text=auto`
+# detects most of them, but being explicit keeps a stray heuristic from
+# corrupting a logo or a signed PDF.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.xlsx binary
+*.zip binary
+*.sqlite3 binary
