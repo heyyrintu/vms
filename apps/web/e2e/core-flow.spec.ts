@@ -14,8 +14,12 @@ test("trip register status filter lists every backend state", async ({ page }) =
   await loginAs(page, "operations");
   await page.goto("/trips");
   await expect(page.getByLabel("Trip status")).toBeVisible();
-  const options = await page.getByLabel("Trip status").locator("option").allTextContents();
-  expect(options).toContain("Settlement approval pending");
+  // The select is visible as soon as its "All statuses" placeholder renders, but
+  // the states themselves arrive with the /api/choices query. allTextContents()
+  // is a one-shot read, so assert through expect.poll rather than racing it.
+  await expect
+    .poll(() => page.getByLabel("Trip status").locator("option").allTextContents())
+    .toContain("Settlement approval pending");
 });
 
 test("fleet page loads driver documents on demand only", async ({ page }) => {
