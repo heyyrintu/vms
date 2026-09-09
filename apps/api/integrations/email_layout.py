@@ -60,6 +60,15 @@ def _note(text):
     )
 
 
+def _section(text):
+    """A rule plus a bold label, so one email can carry several payout blocks."""
+    return (
+        f'<div class="dl-title dl-rule" style="margin:20px 0 12px;padding-top:16px;'
+        f'border-top:1px solid {LINE};font-family:{FONT};font-size:15px;font-weight:700;'
+        f'color:{INK};">{escape(text)}</div>'
+    )
+
+
 def _code(payload):
     code = escape(str(payload.get("code", "")))
     note = payload.get("note", "")
@@ -155,6 +164,7 @@ def _button(payload, accent):
 BLOCK_RENDERERS = {
     "paragraph": lambda value, accent: _paragraph(value),
     "note": lambda value, accent: _note(value),
+    "section": lambda value, accent: _section(value),
     "code": lambda value, accent: _code(value),
     "facts": lambda value, accent: _facts(value),
     "items": lambda value, accent: _items(value),
@@ -221,7 +231,8 @@ HEAD_STYLE = (
     f".dl-card{{background:{BRAND_DARK}!important;border-color:#3d2c29!important;}}"
     ".dl-text,.dl-title{color:#f7efe9!important;}"
     ".dl-muted{color:#b3a29c!important;}"
-    ".dl-panel{background:#30221f!important;border-color:#463330!important;}}"
+    ".dl-panel{background:#30221f!important;border-color:#463330!important;}"
+    ".dl-rule{border-top-color:#463330!important;}}"
 )
 
 

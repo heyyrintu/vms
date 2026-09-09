@@ -62,6 +62,9 @@ SENTENCE_RE = re.compile(r"(?<=[.!?])\s+")
 FACT_RE = re.compile(r"^([A-Za-z][A-Za-z0-9 /_-]{0,28}):\s*(\S.*)$")
 # "Gross 1200.00" inside a pipe-delimited line item.
 METRIC_RE = re.compile(r"^([A-Za-z][A-Za-z ]{0,18}?)\s+([-+]?[\d,]+(?:\.\d+)?|\S+)$")
+# A line that is nothing but a label and a colon ("Vendor 2 of 3 - Acme Roadways:")
+# opens a new section. With a value after the colon it is a fact row instead.
+HEADING_RE = re.compile(r"^([^:|]{2,60}):$")
 
 
 def _sentences(text):
@@ -158,6 +161,11 @@ def _parse_body(body, *, event_key):
             trailing = line[url_match.end():].strip(" .,;)")
             if trailing:
                 document.add_text(trailing)
+            continue
+
+        heading = HEADING_RE.match(line)
+        if heading:
+            document.add_block("section", heading.group(1).strip())
             continue
 
         item = _split_line_item(line) if "|" in line else None

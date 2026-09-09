@@ -295,6 +295,17 @@ def render_event(event_key, context, *, channel="IN_APP", fallback_subject=None,
     return subject.format_map(safe), body.format_map(safe)
 
 
+# Finance cannot pay from a reference and a link alone, so the email variant of
+# FINANCE_READY carries the payee, the verified bank account, the trip lines and
+# the evidence on file. The in-app feed and the WhatsApp template stay short.
+FINANCE_READY_EMAIL_BODY = (
+    "Approved payable {reference} is ready for finance. "
+    "Payout: {payout_summary}.\n"
+    "{payout_brief}\n"
+    "Open securely: {action_url}"
+)
+
+
 WHATSAPP_APPROVAL_SALT = "drona-logitech-whatsapp-approval-v1"
 
 
@@ -553,6 +564,14 @@ def emit_event(event_key, *, instance, actor=None):
         action_url = f"{web_origin}/payments/{instance.pk}"
     elif event_key == "SETTLEMENT_PENDING":
         action_url = f"{web_origin}/trips/{instance.pk}"
+    payout_brief = ""
+    payout_headline = ""
+    if event_key == "FINANCE_READY":
+        from payments.finance_brief import build_payout_brief, payout_summary, vendor_payouts
+
+        payouts = vendor_payouts(instance)
+        payout_brief = build_payout_brief(payouts)
+        payout_headline = payout_summary(payouts)
     context = {
         "reference": reference,
         "actor": getattr(actor, "username", "System"),
@@ -561,6 +580,8 @@ def emit_event(event_key, *, instance, actor=None):
         "tds": getattr(instance, "tds_requested", ""),
         "net": getattr(instance, "net_requested", getattr(instance, "net_paid_amount", "")),
         "utr": getattr(instance, "utr_reference", ""),
+        "payout_brief": payout_brief,
+        "payout_summary": payout_headline,
     }
     external_channels = (
         (IntegrationMessage.Channel.EMAIL, "email"),
@@ -587,7 +608,23 @@ def emit_event(event_key, *, instance, actor=None):
                 user=user, event_key=event_key, channel=channel, enabled=False
             ).exists():
                 continue
-            subject, body = render_event(event_key, context, channel=channel)
+            fallback_body = None
+            summary = None
+            if (
+                event_key == "FINANCE_READY"
+                and channel == IntegrationMessage.Channel.EMAIL
+                and payout_brief
+            ):
+                # Only the mailbox carries the full brief; the message log keeps
+                # the one-liner so the notification list stays readable.
+                fallback_body = FINANCE_READY_EMAIL_BODY
+                summary = (
+                    f"Approved payable {reference} is ready for finance. "
+                    f"Payout: {payout_headline}."
+                )
+            subject, body = render_event(
+                event_key, context, channel=channel, fallback_body=fallback_body
+            )
             if channel != IntegrationMessage.Channel.IN_APP and action_url not in body:
                 body = f"{body}\n\nOpen securely: {action_url}"
             provider_options = None
@@ -624,6 +661,7 @@ def emit_event(event_key, *, instance, actor=None):
                 event_key=event_key,
                 actor=actor,
                 provider_options=provider_options,
+                summary=summary,
             )
 
 
