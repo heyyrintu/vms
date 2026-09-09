@@ -244,6 +244,7 @@ class TripChargeSerializer(serializers.ModelSerializer):
 
 class DocumentSerializer(serializers.ModelSerializer):
     download_url = serializers.SerializerMethodField()
+    preview_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Document
@@ -254,6 +255,7 @@ class DocumentSerializer(serializers.ModelSerializer):
             "kind",
             "file",
             "download_url",
+            "preview_url",
             "original_name",
             "content_type",
             "size",
@@ -265,6 +267,7 @@ class DocumentSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "download_url",
+            "preview_url",
             "original_name",
             "content_type",
             "size",
@@ -280,6 +283,10 @@ class DocumentSerializer(serializers.ModelSerializer):
     def get_download_url(self, obj):
         # Relative so the Next.js /api rewrite proxies it with the session cookie.
         return f"/api/documents/{obj.pk}/download/"
+
+    @extend_schema_field(serializers.URLField())
+    def get_preview_url(self, obj):
+        return f"/api/documents/{obj.pk}/preview/"
 
 
 class TripRecoverySerializer(serializers.ModelSerializer):

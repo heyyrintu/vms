@@ -78,8 +78,12 @@ SAMPLES = [
             "TRIP-2026-0108 | Bhiwandi → Coimbatore | MH04GT2288 | Docs: POD | "
             "Gross 62,500.00 | TDS 625.00 | Net 61,875.00\n"
             "Missing trip evidence: LR, POD, Vendor invoice.\n"
-            "The documents listed above are downloadable from the finance queue, "
-            "where the transfer is recorded.\n"
+            "Attached: 4 files\n"
+            "Attached documents: Cancelled cheque, POD, LR, PAN\n"
+            "One document exceeds the email attachment limit and can be opened from "
+            "the finance queue: Vendor invoice (TRIP-2026-0091).\n"
+            "The attached files are the evidence listed above; the finance queue "
+            "holds the same documents and records the transfer.\n"
             "Open securely: https://vms.dronalogitech.com/finance?approval=418"
         ),
     },

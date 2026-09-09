@@ -223,6 +223,32 @@ def deliver_message(message_or_id, *, actor=None):
                     "content_type": document.content_type,
                     "content": attachment.read(),
                 }
+        attachment_specs = provider_options.pop("attachment_documents", None)
+        if message.channel == IntegrationMessage.Channel.EMAIL and attachment_specs:
+            from operations.models import Document
+
+            attachments = []
+            for spec in attachment_specs:
+                document = Document.objects.filter(pk=spec["id"], scan_status="CLEAN").first()
+                if not document:
+                    # Deleted or quarantined since queueing. The brief already named
+                    # it; losing an attachment must never hold up the payout notice.
+                    continue
+                try:
+                    with document.file.open("rb") as handle:
+                        content = handle.read()
+                except (OSError, ValueError):
+                    logger.warning(
+                        "Finance email %s skipped unreadable document %s", message.pk, document.pk
+                    )
+                    continue
+                attachments.append({
+                    "filename": spec["filename"],
+                    "content_type": document.content_type,
+                    "content": content,
+                })
+            if attachments:
+                provider_options["attachments"] = attachments
         if message.channel == IntegrationMessage.Channel.EMAIL:
             provider_options.setdefault(
                 "html_body",
@@ -566,11 +592,20 @@ def emit_event(event_key, *, instance, actor=None):
         action_url = f"{web_origin}/trips/{instance.pk}"
     payout_brief = ""
     payout_headline = ""
+    payout_attachments = []
     if event_key == "FINANCE_READY":
-        from payments.finance_brief import build_payout_brief, payout_summary, vendor_payouts
+        from payments.finance_brief import (
+            attachment_plan,
+            build_payout_brief,
+            payout_summary,
+            vendor_payouts,
+        )
 
         payouts = vendor_payouts(instance)
-        payout_brief = build_payout_brief(payouts)
+        payout_attachments, skipped_attachments = attachment_plan(payouts)
+        payout_brief = build_payout_brief(
+            payouts, attachments=payout_attachments, skipped=skipped_attachments
+        )
         payout_headline = payout_summary(payouts)
     context = {
         "reference": reference,
@@ -636,6 +671,14 @@ def emit_event(event_key, *, instance, actor=None):
                 provider_options = approval_whatsapp_options(instance, user, approval_packet)
             elif channel == IntegrationMessage.Channel.WHATSAPP:
                 provider_options = workflow_whatsapp_options(event_key, instance, actor=actor)
+            elif (
+                channel == IntegrationMessage.Channel.EMAIL
+                and event_key == "FINANCE_READY"
+                and payout_attachments
+            ):
+                # Only ids travel in the encrypted payload row; the bytes are loaded
+                # at delivery. WhatsApp keeps its approved Meta template untouched.
+                provider_options = {"attachment_documents": payout_attachments}
             event_marker = getattr(instance, "revision_no", 0)
             if event_key == "FINANCE_READY" and hasattr(instance, "items"):
                 event_marker = f"{event_marker}:{instance.items.filter(item_status='APPROVED').count()}"

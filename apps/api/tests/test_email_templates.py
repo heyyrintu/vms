@@ -146,6 +146,51 @@ def test_smtp_provider_sends_multipart_alternative_with_text_fallback(monkeypatc
     assert "Payment PAY-1" in message.get_body(("html",)).get_content()
 
 
+def test_smtp_attachments_keep_the_branded_html_body(monkeypatch):
+    FakeSMTPClient.instances.clear()
+    monkeypatch.setattr("integrations.providers.smtplib.SMTP", FakeSMTPClient)
+    provider = SMTPProvider(host="smtp.example.test", port=587, from_email="t@example.test")
+
+    result = provider.send(
+        recipient="accounts@example.test",
+        subject="Payment ready",
+        body="Approved payable PA-1 is ready for finance.",
+        idempotency_key="finance-email:1",
+        options={
+            "html_body": "<html><body>Ready for payment</body></html>",
+            "attachments": [
+                {
+                    "filename": "V-900-POD-scan.pdf",
+                    "content_type": "application/pdf",
+                    "content": b"%PDF-1.4\npod\n",
+                },
+                {
+                    "filename": "V-900-PAN-card.png",
+                    "content_type": "image/png",
+                    "content": b"\x89PNG\r\n\x1a\npan",
+                },
+            ],
+        },
+    )
+
+    message = FakeSMTPClient.instances[0].message
+    # add_attachment() promotes the message to mixed; the alternative pair - and so
+    # the branded layout - has to survive that or every finance email loses its HTML.
+    assert message.get_content_type() == "multipart/mixed"
+    assert message.get_body(("plain",)).get_content().strip() == (
+        "Approved payable PA-1 is ready for finance."
+    )
+    assert "Ready for payment" in message.get_body(("html",)).get_content()
+    attachments = list(message.iter_attachments())
+    assert [part.get_filename() for part in attachments] == [
+        "V-900-POD-scan.pdf",
+        "V-900-PAN-card.png",
+    ]
+    assert [part.get_content_type() for part in attachments] == ["application/pdf", "image/png"]
+    assert attachments[0].get_payload(decode=True) == b"%PDF-1.4\npod\n"
+    assert result.metadata["attachment_count"] == 2
+
+
 def test_smtp_provider_stays_plain_text_without_html(monkeypatch):
     FakeSMTPClient.instances.clear()
     monkeypatch.setattr("integrations.providers.smtplib.SMTP", FakeSMTPClient)

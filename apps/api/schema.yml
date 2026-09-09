@@ -1137,6 +1137,29 @@ paths:
               schema:
                 $ref: '#/components/schemas/Document'
           description: ''
+  /api/documents/{id}/preview/:
+    get:
+      operationId: api_documents_preview_retrieve
+      description: The same bytes as `download`, rendered in place for the document
+        viewer.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this document.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+          description: ''
   /api/drivers/:
     get:
       operationId: api_drivers_list
@@ -4734,6 +4757,10 @@ components:
           type: string
           format: uri
           readOnly: true
+        preview_url:
+          type: string
+          format: uri
+          readOnly: true
         original_name:
           type: string
           readOnly: true
@@ -4769,6 +4796,7 @@ components:
       - object_id
       - object_type
       - original_name
+      - preview_url
       - scan_detail
       - scan_status
       - sha256

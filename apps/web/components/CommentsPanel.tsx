@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api, listResults } from "@/lib/api";
 import type { DocumentRecord, Paginated, User } from "@/lib/types";
 import { DateText, Empty, ErrorNotice, Loading } from "@/components/UI";
+import { DocumentChips, useDocumentViewer } from "@/components/DocumentViewer";
 
 type Candidate = { id: number; label: string; role: string };
 type Comment = {
@@ -38,6 +39,7 @@ export function CommentsPanel({
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>();
+  const { open: openDocument, viewer } = useDocumentViewer();
   const comments = useQuery({
     queryKey: ["comments", objectType, objectId],
     queryFn: () => api<Paginated<Comment>>(`/comments/?object_type=${objectType}&object_id=${objectId}&page_size=200`),
@@ -132,13 +134,12 @@ export function CommentsPanel({
                 </small>
                 <p>{entry.body}</p>
                 {entry.attachments?.length > 0 && (
-                  <div className="actions">
-                    {entry.attachments.map((doc) => (
-                      <a className="button small" href={doc.download_url} key={doc.id}>
-                        {doc.original_name}
-                      </a>
-                    ))}
-                  </div>
+                  <DocumentChips
+                    documents={entry.attachments}
+                    empty=""
+                    onOpen={openDocument}
+                    render={(doc) => doc.original_name}
+                  />
                 )}
                 <div className="actions">
                   <button type="button" className="button small" onClick={() => beginReply(entry)}>
@@ -215,6 +216,7 @@ export function CommentsPanel({
           </div>
         </form>
       </div>
+      {viewer}
     </section>
   );
 }

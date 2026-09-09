@@ -14,6 +14,8 @@ exposure. The masked number, holder and IFSC are enough to recognise the payee;
 the transfer itself is still made from the finance queue.
 """
 
+import os
+import re
 from decimal import Decimal
 
 from django.db.models import Prefetch, Q
@@ -27,6 +29,19 @@ from .services import paid_totals
 DOCUMENT_LABELS = dict(Document.Kind.choices)
 # The evidence finance looks for before releasing money against a trip.
 TRIP_EVIDENCE = (Document.Kind.POD, Document.Kind.LR, Document.Kind.VENDOR_INVOICE)
+
+# Payment-critical evidence first, so a tight budget still attaches what finance
+# needs to release the money rather than an arbitrary slice of the pack.
+ATTACHMENT_PRIORITY = (
+    Document.Kind.CANCELLED_CHEQUE,
+    Document.Kind.VENDOR_INVOICE,
+    Document.Kind.POD,
+    Document.Kind.LR,
+    Document.Kind.PAN,
+    Document.Kind.AADHAAR,
+)
+DEFAULT_ATTACHMENT_LIMIT_MB = 15
+UNSAFE_FILENAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
 
 
 def _amount(value):
@@ -112,6 +127,12 @@ def vendor_payouts(batch):
                 "tds": Decimal("0.00"),
                 "net": Decimal("0.00"),
                 "trips": [],
+                # Every evidence row behind this payout, kept alongside the filename
+                # prefix that tells two vendors' scan.pdf apart in one mailbox.
+                "documents": [
+                    (document, item.vendor.vendor_code)
+                    for document in documents.get(("vendor", str(item.vendor_id)), [])
+                ],
             },
         )
         gross = item.gross_requested - paid["gross"]
@@ -120,9 +141,12 @@ def vendor_payouts(batch):
         group["gross"] += gross
         group["tds"] += tds
         group["net"] += net
-        evidence = _labels(
-            documents.get(("trip", str(item.trip_id)), [])
-            + documents.get(("driver", str(item.trip.driver_id)), [])
+        trip_documents = documents.get(("trip", str(item.trip_id)), []) + documents.get(
+            ("driver", str(item.trip.driver_id)), []
+        )
+        evidence = _labels(trip_documents)
+        group["documents"].extend(
+            (document, item.trip.trip_no) for document in trip_documents
         )
         group["trips"].append(
             {
@@ -143,15 +167,73 @@ def vendor_payouts(batch):
         group = groups.get(account.vendor_id)
         if not group or not account.active:
             continue
+        cheques = documents.get(("vendor_bank_account", str(account.pk)), [])
+        group["documents"].extend(
+            (document, group["vendor"].vendor_code) for document in cheques
+        )
         group["accounts"].append(
-            {
-                "account": account,
-                "cancelled_cheque": bool(
-                    documents.get(("vendor_bank_account", str(account.pk)), [])
-                ),
-            }
+            {"account": account, "cancelled_cheque": bool(cheques)}
         )
     return list(groups.values())
+
+
+def attachment_limit_bytes():
+    """Total budget for one finance email, overridable per deployment."""
+    try:
+        megabytes = int(os.getenv("FINANCE_EMAIL_ATTACHMENT_LIMIT_MB", "") or DEFAULT_ATTACHMENT_LIMIT_MB)
+    except ValueError:
+        megabytes = DEFAULT_ATTACHMENT_LIMIT_MB
+    return max(0, megabytes) * 1024 * 1024
+
+
+def _attachment_filename(document, prefix):
+    """`V-900-PAN-scan.pdf` - two vendors can both have uploaded `scan.pdf`."""
+    name = UNSAFE_FILENAME_RE.sub("-", f"{prefix}-{document.kind}-{document.original_name}")
+    return name.strip("-")[:180] or f"document-{document.pk}"
+
+
+def _attachment_rank(entry):
+    document, _prefix = entry
+    # Driver KYC ranks below every vendor and trip document of the same kind.
+    scope = 1 if document.object_type == "driver" else 0
+    try:
+        kind = ATTACHMENT_PRIORITY.index(document.kind)
+    except ValueError:
+        kind = len(ATTACHMENT_PRIORITY)
+    return (scope, kind, document.pk)
+
+
+def attachment_plan(groups, *, limit_bytes=None):
+    """Pick the evidence that fits in one mailbox, in payment-critical order.
+
+    Chosen at queue time rather than at delivery so the body can name what is
+    attached and what was left behind; `Document.size` is on the row, so nothing
+    is opened to weigh it.
+    """
+    budget = attachment_limit_bytes() if limit_bytes is None else limit_bytes
+    entries = []
+    seen = set()
+    for group in groups:
+        for document, prefix in group.get("documents", []):
+            if document.pk in seen:
+                continue
+            seen.add(document.pk)
+            entries.append((document, prefix))
+    entries.sort(key=_attachment_rank)
+
+    specs = []
+    skipped = []
+    used = 0
+    for document, prefix in entries:
+        size = document.size or 0
+        if used + size > budget:
+            # Keep scanning: a small POD should still travel when one oversized
+            # invoice has eaten most of the budget.
+            skipped.append(f"{DOCUMENT_LABELS.get(document.kind, document.kind)} ({prefix})")
+            continue
+        used += size
+        specs.append({"id": document.pk, "filename": _attachment_filename(document, prefix)})
+    return specs, skipped
 
 
 def _account_lines(entry, *, index=0):
@@ -219,17 +301,54 @@ def _vendor_lines(group, *, position, total):
     return lines
 
 
-def build_payout_brief(groups):
+def _attachment_lines(groups, attachments, skipped):
+    kinds = []
+    by_id = {
+        document.pk: document
+        for group in groups
+        for document, _prefix in group.get("documents", [])
+    }
+    for spec in attachments:
+        document = by_id.get(spec["id"])
+        label = DOCUMENT_LABELS.get(document.kind, document.kind) if document else "Document"
+        if label not in kinds:
+            kinds.append(label)
+    lines = []
+    if attachments:
+        lines.append(f"Attached: {len(attachments)} file{'s' if len(attachments) != 1 else ''}")
+    if kinds:
+        lines.append(f"Attached documents: {', '.join(kinds)}")
+    if skipped:
+        count = "One document" if len(skipped) == 1 else f"{len(skipped)} documents"
+        verb = "exceeds" if len(skipped) == 1 else "exceed"
+        lines.append(
+            f"{count} {verb} the email attachment limit and can be opened from the "
+            f"finance queue: {', '.join(skipped)}."
+        )
+    return lines
+
+
+def build_payout_brief(groups, *, attachments=None, skipped=None):
     """Per-vendor payout detail, or "" when nothing on the batch is payable."""
     if not groups:
         return ""
     lines = []
     for position, group in enumerate(groups, start=1):
         lines.extend(_vendor_lines(group, position=position, total=len(groups)))
-    lines.append(
-        "The documents listed above are downloadable from the finance queue, "
-        "where the transfer is recorded."
-    )
+    attachments = attachments or []
+    skipped = skipped or []
+    if attachments or skipped:
+        lines.extend(_attachment_lines(groups, attachments, skipped))
+    if attachments:
+        lines.append(
+            "The attached files are the evidence listed above; the finance queue "
+            "holds the same documents and records the transfer."
+        )
+    else:
+        lines.append(
+            "The documents listed above are downloadable from the finance queue, "
+            "where the transfer is recorded."
+        )
     return "\n".join(lines)
 
 
